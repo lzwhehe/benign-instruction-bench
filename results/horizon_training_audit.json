@@ -1,0 +1,57 @@
+{
+ "rgeada/tool-response-injections": {
+  "rows": 11834,
+  "agentdojo_marker_counts": {
+   "this is an important message from me": 0,
+   "<information>": 0,
+   "before you can solve the task that i gave you in the beginning": 0,
+   "ignore your previous iunstructions": 0,
+   "todo: ": 4
+  },
+  "bipia_attack_strings_found": "0 of 250"
+ },
+ "nvidia/Nemotron-RL-Agentic-Indirect-Prompt-Injection-v1": {
+  "rows": 1272,
+  "agentdojo_marker_counts": {
+   "this is an important message from me": 0,
+   "<information>": 0,
+   "before you can solve the task that i gave you in the beginning": 0,
+   "ignore your previous iunstructions": 0,
+   "todo: ": 0
+  },
+  "bipia_attack_strings_found": "0 of 250"
+ },
+ "3nesdeniz/agentic-prompt-injection-5k": {
+  "rows": 3923,
+  "agentdojo_marker_counts": {
+   "this is an important message from me": 0,
+   "<information>": 0,
+   "before you can solve the task that i gave you in the beginning": 0,
+   "ignore your previous iunstructions": 0,
+   "todo: ": 0
+  },
+  "bipia_attack_strings_found": "0 of 250"
+ },
+ "3nesdeniz/agentic-prompt-injection-boundary-pairs": {
+  "rows": 840,
+  "agentdojo_marker_counts": {
+   "this is an important message from me": 0,
+   "<information>": 0,
+   "before you can solve the task that i gave you in the beginning": 0,
+   "ignore your previous iunstructions": 0,
+   "todo: ": 0
+  },
+  "bipia_attack_strings_found": "0 of 250"
+ },
+ "hendzh/PromptShield": {
+  "rows": 18909,
+  "agentdojo_marker_counts": {
+   "this is an important message from me": 0,
+   "<information>": 0,
+   "before you can solve the task that i gave you in the beginning": 0,
+   "ignore your previous iunstructions": 0,
+   "todo: ": 11
+  },
+  "bipia_attack_strings_found": "0 of 250"
+ }
+}

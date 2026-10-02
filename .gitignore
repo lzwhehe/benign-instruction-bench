@@ -1,0 +1,11 @@
+# build artifacts and local previews
+paper/preview/
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.blg
+paper/*.out
+__pycache__/
+*.pyc
+# evaluation sets are rebuilt from public sources by reproduce.sh, not redistributed
+*.jsonl

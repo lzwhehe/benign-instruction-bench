@@ -1,0 +1,14 @@
+\section{Deployment Setting and Threat Model}
+\label{sec:threat}
+
+\paragraph{System model.}
+A user gives an LLM agent a task in natural language. The agent calls tools (email search, calendar lookup, transaction history, web pages, file reads) and appends each tool output to its context before deciding the next step. A \emph{detector} screens every tool output before it enters the context. If the detector flags an output, the deployment either drops the output or stops the task and asks a human. Either way, a flagged benign output costs the user the task, so we count a task as \emph{blocked} if any of its tool outputs is flagged. This is the configuration of detector-based defenses in agent frameworks, including the detector baseline that AgentDojo ships~\cite{agentdojo} and the scanner layer of LlamaFirewall~\cite{llamafirewall}.
+
+\paragraph{Attacker capabilities and goals.}
+The attacker controls part of the data some tool returns (\textbf{A1}): a calendar event description, an email body, a review on a booking site, a table cell, or an answer on a Q\&A site. The attacker cannot change the user's request, the agent, or the detector. We distinguish attacks by goal, following BIPIA's taxonomy~\cite{bipia}: \emph{action} goals make the agent do something consequential (send money, forward a file, run code); \emph{task-irrelevant} goals make it perform an unrelated task; \emph{task-relevant} goals change how it answers the user's own task (reverse the text, answer in Base64).
+
+\paragraph{Security goals of the detector.}
+\textbf{G1}: benign tool outputs pass, so that tasks are not blocked. \textbf{G2}: injected tool outputs are flagged at an operating point that satisfies G1.
+
+\paragraph{Scope.}
+We measure detectors against the static attacks that public benchmarks ship. An adaptive attacker who targets a specific detector would lower detection rates further~\cite{attackermovessecond}, so our detection numbers are upper bounds. We do not propose a new defense; the task-aware judges in \S\ref{sec:method} serve as a diagnostic that separates what the benchmark measures from what the detector learned.

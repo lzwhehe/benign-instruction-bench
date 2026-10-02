@@ -1,0 +1,59 @@
+# Passing the Test You Trained On
+
+Re-evaluating prompt-injection detectors where LLM agents actually use them: on the tool outputs an agent reads.
+
+Teams pick injection detectors by their benchmark scores. We check whether those scores predict behavior inside an agent, and find that they mostly measure how close the benchmark is to the detector's training data.
+
+## Findings
+
+Fifteen detectors (nine open, six license-gated including Meta's Prompt Guard 2) and two task-aware LLM judges, on two agent benchmarks (AgentDojo, tau-bench) and on BIPIA. Benign tool outputs come from replaying each benchmark's ground-truth tool calls without an LLM. Detection is TPR at the threshold that gives 1% FPR.
+
+| Detector | Released | FPR on benign tool outputs (AgentDojo / tau-bench) | Detection AgentDojo | Detection tau-bench | Detection BIPIA |
+|---|---|---|---|---|---|
+| Horizon-Labs guard-base | 2026 | 0.0% / 0.7% | 82.2% | 100.0% | 37.7% |
+| Wolf Defender | 2026 | 0.9% / 0.0% | 73.8% | 90.8% | 3.5% |
+| Prompt Guard 2 (86M) | 2025 | 0.6% / 0.0% | 69.4% | 57.9% | 10.4% |
+| Prompt Guard 2 (22M) | 2025 | 0.0% / 0.0% | 60.9% | 60.8% | 31.7% |
+| Prismor-1.5B | 2026 | 6.5% / 46.2% | 72.2% | 15.2% | 4.0% |
+| Sheltron-68M | 2026 | 10.6% / 4.4% | 20.1% | 95.2% | 57.2% |
+| Judge (Llama-3.1-8B) | – | – | 55.3% | 78.3% | 8.3% |
+| PIGuard | 2025 | 29.5% / 11.0% | 2.1% | 52.7% | **95.1%** |
+| ProtectAI v2 | 2024 | 30.1% / 66.9% | 0.5% | 10.1% | 0.7% |
+
+(All 15 detectors and both judges: `paper/tab_many.tex`.)
+
+1. Detection rankings transfer poorly between benchmarks (Kendall τ over 15 detectors): 0.01 for BIPIA vs AgentDojo, 0.28 for AgentDojo vs tau-bench, 0.31 for BIPIA vs tau-bench; none significant. The BIPIA leader (PIGuard) ranks 13th of 15 on AgentDojo; Prismor drops from 72% on AgentDojo to 15% on tau-bench.
+2. False-positive rates on benign tool outputs range from 0% to over 90%, are consistent across the two agent benchmarks (τ = 0.67, p = 0.001), and are not predicted by false positives on ordinary text.
+3. The form of the training inputs, not overlap in attack strings, explains the results. PIGuard trained on 1,116 full BIPIA inputs and leads BIPIA. It also saw 53 of InjecAgent's 62 attacks, but only as short prompts; inside tau-bench tool outputs it detects seen and unseen InjecAgent attacks alike (52.1% vs 55.8%). Horizon-Labs shares no data with any benchmark, trained on agent-style inputs, and leads both agent benchmarks.
+4. Task-aware 7–8B judges (one trained before AgentDojo existed) reach 54–78% at 1% FPR on agent tool outputs, below the best dedicated detectors. Outside its training distribution every approach misses whole classes of injections; apart from PIGuard, no approach catches more than 39% of task-irrelevant injections.
+5. Removing serialization markup or declaring the input type lowers default-threshold false positives by up to about twentyfold but does not fix low-FPR detection.
+
+All numbers are regenerated from the score files by `analysis/compute_all.py`; the paper reads them only through `paper/numbers.tex`.
+
+## Layout
+
+```
+scripts/     build evaluation sets, score detectors and judges
+analysis/    compute_all.py, compute_many.py (every number, table, figure), make_macros.py (-> LaTeX macros)
+results/     detector and judge scores used in the paper
+paper/       LaTeX source, figures, compiled main.pdf
+```
+
+## Reproduce
+
+```bash
+pip install -r requirements.txt
+AGENTDOJO_PY=/path/to/agentdojo-env/bin/python QWEN=/models/Qwen2.5-7B-Instruct LLAMA=/models/Llama-3.1-8B-Instruct bash reproduce.sh
+```
+
+To regenerate only the numbers and figures from the released scores, copy `results/*.json` into the working directory, rebuild the `.jsonl` sets (steps 1–3 of `reproduce.sh`, CPU only), then run `python analysis/compute_all.py && python analysis/make_macros.py`.
+
+Evaluation data is rebuilt from the public sources, not redistributed: AgentDojo v1.2, tau-bench (MIT), InjecAgent attacks (MIT), BIPIA (MIT), GitHub READMEs (`h1alexbel/github-readmes`), AESLC, FineWeb-Edu. Some scripts assume BIPIA and PIGuard are cloned under `~/agentsec/`.
+
+## Building the paper
+
+`paper/usenix-2020-09-xetex.sty` is a build copy of the USENIX style that compiles with tectonic/XeTeX. For submission, switch `main.tex` to the official `usenix-2020-09.sty` and compile with pdflatex.
+
+## Status
+
+Draft. Not yet evaluated against adaptive attacks; both agent benchmarks are simulations and tau-bench's injection point is ours; commercial API detectors not included. See §6 of the paper.

@@ -1,0 +1,12 @@
+torch==2.8.0
+transformers==4.57.6
+bitsandbytes==0.50.2
+accelerate==1.15.0
+datasets==5.0.1
+huggingface_hub
+scikit-learn
+numpy
+pandas
+matplotlib
+# separate environment for AgentDojo replay (pins its own dependencies):
+#   agentdojo==0.1.34

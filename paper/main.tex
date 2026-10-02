@@ -1,0 +1,41 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+% For submission: \usepackage{usenix-2020-09} and compile with pdflatex.
+\usepackage{usenix-2020-09-xetex}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.misc,fit}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+\input{numbers}
+\newcommand{\finding}[2]{\par\smallskip\noindent\textbf{Finding #1.} \emph{#2}\par\smallskip}
+\newcommand{\RQ}[1]{\textbf{RQ#1}}
+
+\begin{document}
+\date{}
+\title{\Large \bf Passing the Test You Trained On:\\Re-evaluating Prompt-Injection Detectors for LLM Agents}
+\author{{\rm Anonymous submission}}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/background}
+\input{sections/threat}
+\input{sections/method}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/related}
+\input{sections/conclusion}
+\input{sections/ethics}
+
+{\footnotesize \bibliographystyle{acm}
+\bibliography{refs}}
+
+\appendix
+\input{sections/appendix}
+\end{document}

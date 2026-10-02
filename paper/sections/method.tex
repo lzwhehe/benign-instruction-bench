@@ -1,0 +1,55 @@
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Detectors and Judges}
+
+\paragraph{Detectors.}
+We evaluate \NDetectors detectors (Table~\ref{tab:many}). We started from the most downloaded text-classification models on Hugging Face that are labeled as prompt-injection detectors, kept those that output an injection decision, and added the agent-oriented detectors released in 2026. Six are gated behind a license agreement, which we accepted: Meta's Prompt Guard~1 and Prompt Guard~2 (86M and 22M)~\cite{llamafirewall}, ProtectAI's small v2 model, and two Sentinel models. The set spans three generations: DeBERTa-v3 classifiers from 2023--2025 (ProtectAI~\cite{protectai}, JasperLS, TestSavant, PIGuard~\cite{piguard}, Prompt Guard), ModernBERT and Qwen3-based classifiers from 2025--2026 (the two Sentinels, and Sheltron, Wolf Defender, and Horizon-Labs, whose cards target agent inputs), and a fine-tuned 1.5B generative classifier (Prismor). We run each detector as its model card documents, including its context length (512 to 2{,}048 tokens), its segmentation of long inputs, its input template, and, for Sheltron, its role and source tokens; for Prompt Guard~1 we use Meta's indirect-injection score, the sum of its injection and jailbreak probabilities. Appendix~\ref{app:configs} lists the settings. Two detectors need care. InjecGuard returns the same scores as PIGuard on every input we scored, so we report it once. Sheltron's encoder also accepts a trusted ``user goal'' segment; its card does not document this use, but we report it as a task-aware variant because it is the only detector that can take the user's request as input. Two further detectors, \texttt{deepset/deberta-v3-base-injection} and \texttt{fmops/distilbert-prompt-injection}, flag every benign README chunk and we omit them (Appendix~\ref{app:excluded}). One gated detector (CodeIntegrity) did not grant access.
+
+\paragraph{Task-aware judges.}
+To test whether information the detectors lack would change the outcome, we prompt an instruction-tuned model with the user's request and one tool output and ask whether the output tries to make the assistant do something the user did not ask for (prompt in Appendix~\ref{app:prompt}). The score is the probability of ``Yes'' relative to ``No'' at the first generated token, summed over token variants. We use Qwen2.5-7B-Instruct~\cite{qwen25} and Llama-3.1-8B-Instruct~\cite{llama3}, both quantized to 4 bits (NF4). The Llama model's training data ends in December 2023, six months before AgentDojo was released, so it cannot have seen AgentDojo's tasks or attack templates. The 4-bit Qwen judge matches the same model served in bf16 to within 0.02 AUROC on AgentDojo.
+
+\subsection{Data}
+
+Table~\ref{tab:data} lists the evaluation sets: two agent benchmarks, one injection benchmark, and general benign text.
+
+\paragraph{General benign text.}
+We sample \NGeneral chunks of 80--220 words, about 2{,}500 each from GitHub READMEs~\cite{githubreadmes}, business emails (AESLC~\cite{aeslc}), and educational web pages (FineWeb-Edu~\cite{fineweb}). Every chunk is benign.
+
+\paragraph{Clean agent tool outputs (AD-Clean).}
+AgentDojo v1.2 ships, for every user task, the sequence of tool calls that solves it~\cite{agentdojo}. We execute these calls in the default environment, without any injection and without an LLM, and record each tool output exactly as AgentDojo formats it for the agent. This yields \NCleanOutputs outputs from \NCleanTasks tasks in four suites (workspace, travel, banking, slack). Every output is benign by construction.
+
+\paragraph{Matched agent tool outputs (AD-Matched, AD-Shift).}
+We place one of AgentDojo's built-in attacks into every injection point of a task's environment and replay the same ground-truth calls. An output is labeled \emph{injected} if it differs from the output of the same call in the clean environment, and \emph{benign} otherwise. Substring matching is not sufficient: AgentDojo serializes outputs as YAML, which re-wraps multi-line injected text. AD-Matched uses three attack templates (\texttt{important\_instructions}, \texttt{ignore\_previous}, \texttt{direct}; \NADBenign benign and \NADInj injected outputs). AD-Shift uses five others (\texttt{tool\_knowledge}, \texttt{injecagent}, \texttt{system\_message}, and two variants of \texttt{important\_instructions}; \NADSBenign and \NADSInj). All AgentDojo injection goals are actions.
+
+\paragraph{A second agent benchmark ($\tau$-bench).}
+$\tau$-bench~\cite{taubench} simulates customer-service agents for a retailer and an airline over JSON databases, and ships ground-truth tool calls for each task. Its authors, domains, tools, and output format (JSON rather than YAML) all differ from AgentDojo's. Replaying the ground-truth calls of all \NTBTasks retail and airline tasks without an LLM gives \NTBBenign tool outputs that are benign by construction (TB-Clean). $\tau$-bench has no injection points, so we add one where a third party plausibly controls text: the catalog name of a product, which a marketplace seller writes. For each retail task that looks up a product, we append an attack instruction from InjecAgent~\cite{injecagent} (MIT license; its base and enhanced settings, eight attacks per task, all 62 attacks used) to the names of the products the task looks up, replay the same calls, and label by differential replay. Orders keep the product name recorded at purchase, as in a real store. This yields \NTBInj injected outputs, which we evaluate against TB-Clean as negatives (TB-Matched). InjecAgent was written by yet another group, so its attacks share neither authors nor templates with AgentDojo or BIPIA.
+
+\paragraph{BIPIA.}
+BIPIA~\cite{bipia} provides clean external content for three tasks we use (email question answering, table question answering, and code repair with a Stack Overflow answer) and attack strings in three text groups and two code groups. Each clean context is a benign sample; we insert four randomly drawn attack strings at the start, middle, or end, following BIPIA's insertion rules, to obtain injected samples. BIPIA splits its attack strings into a training and a test half. Our main results use only test-half attacks (\NBIBenign benign, \NBIInj injected); \S\ref{sec:rq3} uses both halves.
+
+\begin{table}[t]
+\centering\small
+\caption{Evaluation sets. Benign / injected counts. AD = AgentDojo v1.2; TB = $\tau$-bench. The benign side of TB-Matched is TB-Clean.}
+\label{tab:data}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Set & Benign & Injected & Content \\
+\midrule
+General text & \NGeneral & -- & README, email, web \\
+AD-Clean & \NCleanOutputs & -- & tool outputs, no injection \\
+AD-Matched & \NADBenign & \NADInj & tool outputs, 3 attacks \\
+AD-Shift & \NADSBenign & \NADSInj & tool outputs, 5 other attacks \\
+TB-Matched & \NTBBenign & \NTBInj & $\tau$-bench tool outputs (JSON) \\
+BIPIA & \NBIBenign & \NBIInj & email, table, code \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Metrics}
+
+We report the false-positive rate (FPR) and true-positive rate (TPR) at each detector's default threshold of 0.5, AUROC, and the TPR at 1\% FPR. A deployment that screens every tool output sees benign outputs far more often than injected ones, so the low-FPR operating point is the one that matters, as in membership inference~\cite{lira} and deployable injection detection~\cite{promptshield}. We pick the 1\%-FPR threshold on the same benign set we evaluate, which favors the detectors; a deployment would have to pick it in advance. For AD-Clean we also report the share of tasks with at least one flagged output. Intervals are 95\% percentile bootstrap intervals over 1{,}000 resamples, stratified by label (by task for task-level rates).
+
+\subsection{Training-Data Audit}
+
+Two detectors publish enough to audit. PIGuard's authors release its training split. We normalize whitespace and case and search it for (i) the first 80 characters of every BIPIA attack string and (ii) the first 120 characters of every clean BIPIA context. Horizon-Labs releases the script that assembles its training set from public datasets; we download the five sources that contain agent or tool-output injections and search them for BIPIA's attack strings and for markers of AgentDojo's attack templates (for example the opening sentence of \texttt{important\_instructions}). We also search both for InjecAgent's 62 attack instructions. Both searches find only verbatim copies and are lower bounds on overlap. The other detectors name their sources at most, so we report what their model cards state.

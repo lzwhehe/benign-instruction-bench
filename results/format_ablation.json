@@ -1,0 +1,26 @@
+{
+ "protectai-deberta-v2": {
+  "original": 0.09788254095085897,
+  "plain": 0.04234918098282062,
+  "prose_only": 0.04714342788653616,
+  "code_only": 0.20768431983385255
+ },
+ "piguard": {
+  "original": 0.2461046743907311,
+  "plain": 0.055533359968038355,
+  "prose_only": 0.05992808629644426,
+  "code_only": 0.08826583592938733
+ },
+ "deepset-deberta": {
+  "original": 1.0,
+  "plain": 0.9992009588493808,
+  "prose_only": 0.9988014382740711,
+  "code_only": 0.857736240913811
+ },
+ "fmops-distilbert": {
+  "original": 1.0,
+  "plain": 0.9984019176987615,
+  "prose_only": 0.9980023971234518,
+  "code_only": 0.857736240913811
+ }
+}

@@ -1,0 +1,40 @@
+\section{Background and Motivating Example}
+\label{sec:background}
+
+\paragraph{Indirect prompt injection.}
+An LLM agent cannot tell instructions from data by position alone: text that a tool returns can redirect the model as easily as text the user typed~\cite{greshake2023,liu2024formalizing}. Defenses fall into three families. Model-level defenses train the model to ignore instructions in the data region~\cite{struq,secalign}. System-level defenses keep untrusted data away from the component that plans actions~\cite{camel}. Detection-based defenses run a separate classifier on untrusted text and drop what it flags~\cite{protectai,piguard,promptshield,datasentinel}. Detectors are the easiest to adopt, because they need no change to the agent or the model, and they are the subject of this paper.
+
+\paragraph{How detectors are evaluated.}
+Detector papers report accuracy on collections of prompts and injected documents, often including BIPIA~\cite{bipia} and the over-defense set NotInject~\cite{piguard}. Practitioners compare released detectors the same way: a 2025 evaluation of nine open guardrails used BIPIA's email and table tasks and concluded that PIGuard detects indirect injection effectively~\cite{mozillaguardrails}. Two questions are left open by this practice. The text in these collections is not what an agent's detector sees, which is serialized tool output. And nothing checks whether the benchmark overlaps with what the detector was trained on.
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=left, font=\scriptsize, inner sep=3pt, text width=#1},
+  box/.default=3.0cm,
+  arr/.style={-{Stealth[length=4pt]}, thick, draw=black!60},
+  lab/.style={font=\scriptsize\bfseries}]
+\node[box=3.2cm, fill=blue!5] (u) {\textbf{User:} ``Please update my account password and then pay the bill in my files.''};
+\node[box=2.2cm, right=0.5cm of u, fill=gray!8, align=center] (a) {\textbf{Agent}\\(LLM + tools)};
+\node[box=3.6cm, below=0.55cm of u, fill=green!6, xshift=0.2cm] (o1) {\texttt{update\_password} returns\\\texttt{\{'message': 'Password updated.'\}}};
+\node[box=3.6cm, below=0.25cm of o1, fill=red!6] (o2) {\texttt{search\_calendar\_events} returns an event whose description contains text planted by an attacker.};
+\node[box=2.2cm, right=0.5cm of o1, yshift=-0.55cm, fill=orange!10, align=center] (d) {\textbf{Detector}\\screens each\\tool output};
+\node[box=2.6cm, right=0.45cm of d, yshift=0.55cm, fill=green!3] (r1) {\textbf{Blocked.} PIGuard score 1.00: a benign output stops the task.};
+\node[box=2.6cm, right=0.45cm of d, yshift=-0.55cm, fill=red!3] (r2) {\textbf{Passed.} At a 1\% FPR threshold, both detectors let almost every such output through.};
+\draw[arr] (u) -- (a);
+\draw[arr] (a.south) |- ([yshift=0.15cm]o1.east);
+\draw[arr] (o1.east) -- (d);
+\draw[arr] (o2.east) -- (d);
+\draw[arr] (d.east) -- (r1.west);
+\draw[arr] (d.east) -- (r2.west);
+\end{tikzpicture}}
+\caption{Running example. A detector between the tools and the agent blocks a harmless confirmation message (top) and, once its threshold is set to keep false alarms rare, passes almost every injected output (bottom). Both outputs come from AgentDojo; the scores are measured (\S\ref{sec:rq1}, \S\ref{sec:rq2}).}
+\label{fig:example}
+\end{figure}
+
+\paragraph{Running example.}
+Figure~\ref{fig:example} shows an AgentDojo banking task. The user asks the agent to update a password and pay a bill. The password tool returns \texttt{\{'message': 'Password updated.'\}}, and PIGuard scores this output 1.00, so a deployment that drops flagged outputs fails a task in which nothing malicious happened. In a workspace task, a calendar event carries a description that an attacker wrote. At their default thresholds the detectors catch many such outputs, but they pay for it with false alarms on a fifth of all benign tool outputs. Once the threshold is moved to keep false alarms at 1\%, almost every injected output passes. Yet on BIPIA, the same PIGuard model catches nearly every injection at the same false-alarm rate. Detectors built for agent inputs show the mirror image: no false alarm on the password confirmation, most AgentDojo injections caught, and most BIPIA injections missed. The rest of this paper explains the pattern.
+
+\paragraph{Why not just pick a better threshold, or a bigger model?}
+Thresholds trade one failure for the other; the question is whether any threshold gives both low FPR and useful detection, which is what TPR at 1\% FPR measures. A bigger general-purpose model can serve as a judge, and we test two such judges; but a judge's verdict depends on what it is asked, and \S\ref{sec:rq4} shows that the question we ask covers some attack goals and not others.

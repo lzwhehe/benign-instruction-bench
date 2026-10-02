@@ -1,0 +1,17 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Evaluation methodology for injection detectors.}
+Fomin~\cite{benchmarkslie} trains activation probes on 18 datasets and shows that leave-one-dataset-out evaluation lowers AUROC compared with in-distribution splits. PromptShield~\cite{promptshield} argues for evaluating detectors at low FPR and builds a curated benchmark for it. PIGuard~\cite{piguard} measures over-defense on benign prompts with trigger words. Unlike these works, we evaluate released detectors on the tool outputs an agent actually screens, translate false positives into blocked tasks, and audit a released detector's published training split against the benchmark used to praise it.
+
+\paragraph{Pitfalls in ML and LLM security research.}
+Arp et al.~\cite{arp2022dos} and Evertz et al.~\cite{chasingshadows} catalog pitfalls such as data leakage and inappropriate metrics in security research with ML and LLMs. Nasr et al.~\cite{attackermovessecond} show that defenses evaluated on static attacks fall to adaptive ones. Our study is an instance of the leakage and metric pitfalls for one widely used class of defenses, with the overlap measured directly rather than inferred.
+
+\paragraph{Detection-based defenses.}
+ProtectAI's detector~\cite{protectai}, PIGuard~\cite{piguard}, and Prompt Guard in LlamaFirewall~\cite{llamafirewall} classify text with a fine-tuned encoder. A newer generation of open detectors, released in 2026 and evaluated here, trains on documents and tool responses with planted instructions or adds role and source tokens to the input; their model cards report results on their own or AgentDojo-derived evaluation sets. DataSentinel~\cite{datasentinel} detects injections with an LLM fine-tuned in a minimax game against adaptive attacks, and AlignSentinel~\cite{alignsentinel} separates instructions that align with the user's task from those that do not, using attention features. Our task-aware judges follow the same intuition as AlignSentinel without training; we use them only to diagnose what the classifiers miss.
+
+\paragraph{Benchmarks.}
+AgentDojo~\cite{agentdojo}, InjecAgent~\cite{injecagent}, and BIPIA~\cite{bipia} measure whether agents or LLMs follow injected instructions. We reuse AgentDojo's ground-truth tool calls and BIPIA's contexts and attacks to build matched benign and injected sets for detectors, a use their authors did not design them for.
+
+\paragraph{Model- and system-level defenses.}
+StruQ~\cite{struq} and SecAlign~\cite{secalign} train the model to ignore instructions in data; CaMeL~\cite{camel} keeps untrusted data out of the planner. These defenses do not rely on recognizing an injection, so our findings about detectors do not apply to them.

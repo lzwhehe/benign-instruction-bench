@@ -1,0 +1,20 @@
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+\paragraph{Choosing a detector for an agent.}
+Our results suggest four practical rules. First, measure false positives on the agent's own tool outputs and translate them into blocked tasks; false positives on prose do not predict them. Second, report detection at a fixed low FPR; default-threshold accuracy on balanced sets says little about either error. Third, before trusting a benchmark score, check whether the detector was trained on that benchmark or on data generated the same way, and prefer evaluation data the detector cannot have seen. Fourth, prefer a detector trained on inputs like the ones it will screen: in our study, Horizon-Labs, Wolf Defender, and both Prompt Guard~2 models kept false positives near zero on both agent benchmarks and caught more than half of the injections on each; Horizon-Labs and Wolf Defender, both built for untrusted content reaching agents, caught more than 70\%. Even these missed most task-irrelevant injections, so a detector is a filter to combine with system-level defenses~\cite{camel}, not a replacement for them.
+
+\paragraph{Simulated agent environments.}
+\emph{Limitation.} Both agent benchmarks are simulations: AgentDojo returns synthetic YAML records, and $\tau$-bench returns JSON from synthetic databases. Real tool outputs (HTML pages, API responses, long documents) are messier, and our results show that format alone moves false-positive rates, so absolute numbers will differ in deployment. In $\tau$-bench we also chose the injection point (product names) and the attack set (InjecAgent) ourselves; another placement, such as reviews or seller messages, could favor different detectors. The findings we expect to carry over are the relative ones that held on both agent benchmarks: which detectors over-flag tool outputs, and that the agent-oriented detectors lead.
+
+\paragraph{Static attacks.}
+\emph{Limitation.} All injections come from benchmark templates. An adaptive attacker who knows the detector or judge would lower every detection rate we report~\cite{attackermovessecond}. Our detection numbers are upper bounds; the false-positive results do not depend on the attacker.
+
+\paragraph{Detector coverage.}
+\emph{Limitation.} We evaluate the open and license-gated detectors we could access; commercial API detectors are closed and not included. Only PIGuard and Horizon-Labs publish enough to audit their training data; for the others we can report only what their model cards state.
+
+\paragraph{The judges are a diagnostic, not a defense.}
+The task-aware judges call a 7--8B model once per tool output, use a single prompt, and were not tested against adaptive attacks. We use them to show which information the detectors lack and which attack goals that information covers. A judge prompt that also asks about changes to the answer might cover task-irrelevant and task-relevant injections, at a cost in false alarms we have not measured.
+
+\paragraph{Verbatim overlap is a lower bound.}
+Our audits find exact copies only. Paraphrases, attacks generated from the same templates, and unpublished data escape them. For PIGuard and BIPIA, verbatim overlap alone already explains the score.
