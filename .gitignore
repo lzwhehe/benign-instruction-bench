@@ -9,3 +9,6 @@ __pycache__/
 *.pyc
 # evaluation sets are rebuilt from public sources by reproduce.sh, not redistributed
 *.jsonl
+
+# arXiv upload package and previews are build outputs
+arxiv/
