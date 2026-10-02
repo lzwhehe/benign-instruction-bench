@@ -57,3 +57,7 @@ Evaluation data is rebuilt from the public sources, not redistributed: AgentDojo
 ## Status
 
 Draft. Not yet evaluated against adaptive attacks; both agent benchmarks are simulations and tau-bench's injection point is ours; commercial API detectors not included. See §6 of the paper.
+
+## License
+
+Code, analysis scripts, and score files: MIT (see `LICENSE`). Third-party files keep their own terms: the USENIX LaTeX style (`paper/usenix-2020-09*.sty`) and the benchmarks and detectors the scripts download (AgentDojo, tau-bench, InjecAgent, BIPIA, and each detector's model license).
