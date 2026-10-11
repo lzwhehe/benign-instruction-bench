@@ -1,0 +1,44 @@
+\subsection{Implications for practitioners}
+\label{sec:guidelines}
+
+The results translate into a procedure that a team can follow before it places a detector between an agent's tools and its model. None of the steps needs access to the detector's internals, and the first four need no injected data (Table~\ref{tab:guidelines}).
+
+\paragraph{1. Measure false positives on the agent's own tool outputs, and report them per task}
+Replay the tool calls of representative tasks, for example from logs or from a test suite with known solutions, and report the share of outputs flagged and the share of tasks with at least one flagged output, because a task stops at its first false alarm. False-positive rates on prose did not predict those on tool outputs, whereas the two agent benchmarks agreed closely (Section~\ref{sec:rq1}). This cheap measurement is the one most likely to disqualify a detector: several detectors would stop most tasks without any attack present.
+
+\paragraph{2. Fix a false-alarm budget and calibrate the threshold on held-out traffic}
+Default thresholds encode the developer's data, not the deployment's. Convert the acceptable share of blocked tasks into a per-output budget, set the threshold on benign outputs from some tools or domains, and check the realized false-positive rate on the others, using the worst slice. For some detectors, a threshold calibrated on three AgentDojo suites flags a third of the fourth suite's benign outputs (Section~\ref{sec:robust}).
+
+\paragraph{3. Ask what the detector was trained on before trusting a benchmark score}
+If the training data are published, search them for the benchmark's inputs; otherwise, treat a score on a benchmark that may share data or generators with the sources named in the model card as an in-distribution score. PIGuard's near-perfect BIPIA result and near-zero AgentDojo result are both correct measurements, but only the second predicts behavior on agent tool outputs (Section~\ref{sec:rq3}).
+
+\paragraph{4. Prefer detectors trained on inputs like the ones they will screen}
+The form of the training inputs mattered more than whether particular attack strings had been seen: detectors trained on documents and tool responses with planted instructions led both agent benchmarks with near-zero false positives, also with held-out thresholds (Sections~\ref{sec:rq3} and~\ref{sec:robust}).
+
+\paragraph{5. Normalize the input before scoring}
+Stripping YAML keys, HTML, and badges, or declaring the input type where a detector supports it, lowered default-threshold false positives by up to about twentyfold at no cost (Section~\ref{sec:rq5}). Normalization should precede calibration, because it shifts the score distribution.
+
+\paragraph{6. Measure detection with the attacks you expect, at the operating point you will use}
+Report detection at the calibrated threshold, broken down by attack goal: every detector missed whole classes of injections outside its training distribution (Section~\ref{sec:rq4}). Static benchmark attacks give an upper bound; an attacker who can query the detector will do better~\cite{attackermovessecond,zhan2025adaptive}.
+
+\paragraph{7. Budget the cost, and combine the detector with system-level defenses}
+Encoder detectors add tens of milliseconds per output and run on a CPU, whereas a task-aware 7--8B judge costs several times as much, needs a GPU, and did not detect more (Sections~\ref{sec:rq4} and~\ref{sec:cost}). Because no detector catches all injections, a detector should be one layer among several, filtering known attack forms in front of defenses that do not depend on recognizing injected text, such as CaMeL~\cite{camel}, MELON~\cite{melon}, or Task Shield~\cite{taskshield}.
+
+\begin{table}[t]
+\centering\small
+\caption{Deployment steps and the sections whose results support them.}
+\label{tab:guidelines}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}p{0.6\columnwidth}l@{}}
+\toprule
+Step & Section \\
+\midrule
+1. False positives on own tool outputs, per task & \ref{sec:rq1} \\
+2. Budget and held-out calibration & \ref{sec:robust} \\
+3. Audit training data before trusting scores & \ref{sec:rq3} \\
+4. Prefer agent-style training inputs & \ref{sec:rq3}, \ref{sec:robust} \\
+5. Normalize inputs before scoring & \ref{sec:rq5} \\
+6. Detection by attack goal at the operating point & \ref{sec:rq2}, \ref{sec:rq4} \\
+7. Cost budget; layer with system defenses & \ref{sec:rq4}, \ref{sec:cost} \\
+\bottomrule
+\end{tabular*}
+\end{table}

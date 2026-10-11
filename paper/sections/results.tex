@@ -1,69 +1,56 @@
 \section{Results}
 \label{sec:results}
 
-We answer five questions.
-\begin{itemize}
-\item \RQ{1}: How often do detectors flag benign agent tool outputs, and how many agent tasks does that stop?
-\item \RQ{2}: How many injections do detectors catch at 1\% FPR, and does a detector's rank on one benchmark predict its rank on another?
-\item \RQ{3}: Does what a detector was trained on explain where it works?
-\item \RQ{4}: Does knowing the user's request help, and which attack goals does each approach miss?
-\item \RQ{5}: Do input format and metadata change false positives?
-\end{itemize}
+Table~\ref{tab:results} reports every detector and judge on every evaluation set. The following subsections answer the seven research questions in turn.
 
 \begin{table*}[t]
-\centering\small
-\caption{All detectors on all sets. General: README, email, and web text. FPR at each detector's default threshold on benign tool outputs (AD-Clean, TB-Clean); ``tasks'' is the share of tasks with at least one flagged benign output. TPR at the threshold that gives 1\% FPR on the same set. BIPIA uses test-half attacks. ``Agent data'': the model card states training on agent or tool-output inputs; ``eval.'' means the card reports evaluation on AgentDojo-derived data. $^\dagger$Undocumented use of Sheltron's user-goal segment. Bootstrap intervals for four methods are in Appendix Table~\ref{tab:main}.}
-\label{tab:many}
-\resizebox{\textwidth}{!}{\input{tab_many}}
+\centering\footnotesize
+\caption{False-positive rate (FPR) and detection (TPR) of all methods on all evaluation sets, in percent, sorted by TPR on AD-Matched. Best value per column in bold (lowest FPR and blocked-task rate, highest TPR).}
+\label{tab:results}
+\input{tab_results}
+\par\smallskip\footnotesize\raggedright
+FPR at the default threshold on benign text (General) or tool outputs (AD-Clean, TB-Clean); Tasks: share of tasks with at least one flagged output. TPR at 1\% FPR on the same set (TPR$_{\mathrm{M}}$: AD-Matched; TPR$_{\mathrm{S}}$: AD-Shift; BIPIA: test-half attacks). Intervals for four methods: Table~\ref{tab:main}.
+$^{\mathrm{c}}$Undocumented use of Sheltron's user-goal segment.
 \end{table*}
 
-\subsection{RQ1: False Positives on Benign Tool Outputs}
+\subsection{RQ1: False positives on benign tool outputs}
 \label{sec:rq1}
 
-False alarms on benign tool outputs vary from none to most (Table~\ref{tab:many}). On AgentDojo, Horizon-Labs flags \MHZClean of AD-Clean outputs and Wolf Defender \MWFClean; they would stop \MHZBlock and \MWFBlock of tasks. ProtectAI v2 and PIGuard flag \CleanPAFPR and \CleanPGFPR of outputs and would stop \CleanPABlock and \CleanPGBlock of tasks (95\% intervals \CleanPABlockCI{} and \CleanPGBlockCI{}). Both Prompt Guard~2 models flag \MPGtClean and \MPGtsClean. On $\tau$-bench's JSON outputs the picture repeats: Horizon-Labs flags \TBFPRHZ, Wolf Defender \TBFPRWF, Prompt Guard~2 \TBFPRPGt, and Sheltron \TBFPRSH, while ProtectAI v2 flags \TBFPRPA and Prismor \TBFPRPR. The flagged outputs contain no instructions; the password confirmation of Figure~\ref{fig:example} is typical.
+This section addresses RQ1 by measuring how often each detector flags the benign tool outputs of AD-Clean and TB-Clean and how many tasks those false alarms would stop. False alarms vary from none to most (Table~\ref{tab:results}). On AgentDojo, Horizon-Labs flags \MHZClean of AD-Clean outputs and Wolf Defender \MWFClean, so they would stop \MHZBlock and \MWFBlock of tasks, respectively. ProtectAI v2 and PIGuard flag \CleanPAFPR and \CleanPGFPR of outputs and would stop \CleanPABlock and \CleanPGBlock of tasks (95\% intervals \CleanPABlockCI{} and \CleanPGBlockCI{}). Both Prompt Guard~2 models flag \MPGtClean and \MPGtsClean. On $\tau$-bench's JSON outputs, the picture repeats: Horizon-Labs flags \TBFPRHZ, Wolf Defender \TBFPRWF, Prompt Guard~2 \TBFPRPGt, and Sheltron \TBFPRSH, whereas ProtectAI v2 flags \TBFPRPA and Prismor \TBFPRPR. The flagged outputs contain no instructions; the password confirmation of Fig.~\ref{fig:example} is typical.
 
-False-positive behavior on tool outputs is a stable property of a detector: its rank by false-positive rate on AgentDojo predicts its rank on $\tau$-bench (Kendall $\tau=\TauFPRADTB$, $p=\TauFPRADTBP$). It is not predicted by false positives on ordinary text. ProtectAI v2 flags \GenPAWebFPR of web pages and \GenPAEmailFPR of emails but \CleanPAFPR of AgentDojo tool outputs and \TBFPRPA of $\tau$-bench outputs.
+False-positive behavior on tool outputs is a stable property of a detector: its rank by false-positive rate on AgentDojo predicts its rank on $\tau$-bench (Kendall's $\tau=\TauFPRADTB$, $p=\TauFPRADTBP$). It is not, however, predicted by false positives on ordinary text. ProtectAI v2, for example, flags \GenPAWebFPR of web pages and \GenPAEmailFPR of emails, but \CleanPAFPR of AgentDojo tool outputs and \TBFPRPA of $\tau$-bench outputs.
 
-\finding{1}{False-positive rates on benign agent tool outputs range from 0\% to over 90\% across detectors, are consistent across the two agent benchmarks ($\tau=\TauFPRADTB$), and are not predicted by false-positive rates on ordinary text.}
+In summary, false-positive rates on benign agent tool outputs range from 0\% to over 90\% across detectors, are consistent across the two agent benchmarks, and are not predicted by false-positive rates on ordinary text.
 
-\subsection{RQ2: Detection at 1\% FPR and Rank Transfer}
+\subsection{RQ2: Detection at 1\% FPR and rank transfer}
 \label{sec:rq2}
 
-On AD-Matched, three detectors catch most injections at 1\% FPR: Horizon-Labs \MHZAD, Wolf Defender \MWFAD, and Prismor \MPRAD. Meta's Prompt Guard~2 catches \MPGtAD (86M) and \MPGtsAD (22M). The other DeBERTa detectors catch between \ADPATpr and \MTSAD, and PIGuard \ADPGTpr. On TB-Matched, Horizon-Labs catches \TBTprHZ, Sheltron \TBTprSH, and Wolf Defender \TBTprWF; PIGuard catches \TBTprPG and Prismor \TBTprPR.
+This section addresses RQ2 by comparing detection at 1\% FPR across benchmarks and measuring whether a detector's rank on one benchmark predicts its rank on another. On AD-Matched, three detectors catch most injections at 1\% FPR: Horizon-Labs \MHZAD, Wolf Defender \MWFAD, and Prismor \MPRAD. Meta's Prompt Guard~2 catches \MPGtAD (86M) and \MPGtsAD (22M). The other DeBERTa detectors catch between \ADPATpr and \MTSAD, and PIGuard catches \ADPGTpr. On TB-Matched, Horizon-Labs catches \TBTprHZ, Sheltron \TBTprSH, and Wolf Defender \TBTprWF, whereas PIGuard catches \TBTprPG and Prismor \TBTprPR.
 
-Rankings do not transfer reliably between benchmarks (Figure~\ref{fig:rank}). Between BIPIA and AD-Matched, Kendall's $\tau$ is \RankTau ($p=\RankTauP$): PIGuard ranks first on BIPIA (\BIPGTpr) and \BestBipiaRankOnAD of \NDetectors on AgentDojo. Between the two agent benchmarks, $\tau$ is \TauADTB ($p=\TauADTBP$), and two detectors trade places: Prismor falls from \MPRAD on AgentDojo to \TBTprPR on $\tau$-bench, while Sheltron rises from \MSHAD to \TBTprSH. Between BIPIA and $\tau$-bench, $\tau$ is \TauBITB ($p=\TauBITBP$). None of these detection correlations is significant across the \NDetectors detectors. Horizon-Labs and Wolf Defender lead both agent benchmarks; the two Prompt Guard~2 models are consistent but lower on both (\MPGtAD and \TBTprPGt for 86M, \MPGtsAD and \TBTprPGts for 22M).
+As shown in Fig.~\ref{fig:rank}, rankings do not transfer reliably between benchmarks. Between BIPIA and AD-Matched, Kendall's $\tau$ is \RankTau ($p=\RankTauP$): PIGuard ranks first on BIPIA (\BIPGTpr) and \BestBipiaRankOnAD of \NDetectors on AgentDojo. Between the two agent benchmarks, $\tau$ is \TauADTB ($p=\TauADTBP$), and two detectors trade places: Prismor falls from \MPRAD on AgentDojo to \TBTprPR on $\tau$-bench, while Sheltron rises from \MSHAD to \TBTprSH. Between BIPIA and $\tau$-bench, $\tau$ is \TauBITB ($p=\TauBITBP$). None of these correlations is significant across \NDetectors detectors, but the evidence differs in strength. For BIPIA and AgentDojo, non-transfer is shown directly by the leading detector on one benchmark ranking near the bottom on the other; for the two agent benchmarks, a positive but non-significant $\tau$ is weak evidence either way, with agreement at the top and disagreement in the middle (Section~\ref{sec:robust}). Horizon-Labs and Wolf Defender lead both agent benchmarks, and the two Prompt Guard~2 models are consistent but lower on both (\MPGtAD and \TBTprPGt for 86M; \MPGtsAD and \TBTprPGts for 22M).
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/fig_rank.pdf}
-\caption{Each point is a detector or judge (diamonds). (a) Detection on BIPIA does not predict detection on AgentDojo. (b) Detection on one agent benchmark predicts detection on the other only partly: Prismor (PR) and Sheltron (SH) trade places. Dashed line: equal performance. Key: HL Horizon-Labs, WD Wolf Defender, PR Prismor, P2/P2s Prompt Guard~2 86M/22M, P1 Prompt Guard~1, PG PIGuard, SH Sheltron, QS Qualifire Sentinel, S2 Sentinel v2, TS TestSavant, JS JasperLS, A1/A2/A2s ProtectAI v1/v2/v2-small, JQ/JL Qwen/Llama judge.}
+\includegraphics[width=\textwidth]{figures/fig_rank.pdf}
+\caption{Detection at 1\% FPR on two benchmarks; each point is a detector or a judge. (a) Detection on BIPIA does not predict detection on AgentDojo. (b) Detection on one agent benchmark predicts detection on the other only partly: Prismor (PR) and Sheltron (SH) trade places. Key: HL Horizon-Labs, WD Wolf Defender, PR Prismor, P2/P2s Prompt Guard~2 86M/22M, P1 Prompt Guard~1, PG PIGuard, SH Sheltron, QS Qualifire Sentinel, S2 Sentinel v2, TS TestSavant, JS JasperLS, A1/A2/A2s ProtectAI v1/v2/v2-small, JQ/JL Qwen/Llama judge.}
 \label{fig:rank}
 \end{figure*}
 
-\finding{2}{A detector's detection rank on one benchmark is a weak guide to its rank on another ($\tau$ between \RankTau and \TauBITB, none significant). The best detector on BIPIA catches \ADPGTpr of AgentDojo injections at 1\% FPR, and a detector that catches \MPRAD of AgentDojo injections catches \TBTprPR on $\tau$-bench.}
+In summary, detection rankings do not transfer from BIPIA to AgentDojo, where the best detector on BIPIA catches \ADPGTpr of injections at 1\% FPR, and they agree only partly between the two agent benchmarks: a detector that catches \MPRAD of AgentDojo injections catches \TBTprPR on $\tau$-bench.
 
-\subsection{RQ3: Training Data}
+\subsection{RQ3: Training data}
 \label{sec:rq3}
 
-Where training data is public, it explains the ranking, and it shows that what transfers is the form of the inputs, not the attack strings.
+This section addresses RQ3 by relating the results of RQ1 and RQ2 to the training-data audit of Section~\ref{sec:method}. Where training data are public, they explain the ranking, and what transfers is the form of the inputs rather than the attack strings.
 
-\paragraph{PIGuard and BIPIA.}
-PIGuard's published training split contains \PGBipiaRows labeled BIPIA inputs: full emails, tables, and code answers with and without inserted attacks (median \PGBipiaChars characters). The verbatim overlap is large (Table~\ref{tab:overlap}): \OvTextTrain text attacks and \OvCodeTrain code attacks from BIPIA's training half appear, as do \OvCleanEmail of BIPIA's clean emails and \OvCleanCode of its clean code contexts. None of BIPIA's test-half attacks appear, and our main results use only those; restricting to them lowers PIGuard's detection at 1\% FPR only from \BISplitPGTrainTpr to \BISplitPGTestTpr, because the two halves come from the same generator and are inserted into the same kinds of content. Training on one half and testing on the other is standard practice; the result is an in-distribution score.
-
-\paragraph{PIGuard and InjecAgent.}
-PIGuard's training split also contains \NIASeen InjecAgent attack instructions, but in another form: \PGIARows short prompts (median \PGIAChars characters) that pair an attack with a generic task sentence, not attacks inside tool responses. This gives a controlled comparison within TB-Matched, where every injected output has the same form. PIGuard detects \TBSeenPG of the outputs carrying an attack it was trained on and \TBUnseenPG of those carrying one of the \NIAUnseen attacks it was not. Having seen the attack text does not help when the surrounding input is new.
-
-\paragraph{Horizon-Labs and the agent benchmarks.}
-Horizon-Labs uses BIPIA only for evaluation and removes evaluation texts from its training data. Its training set includes five public datasets of injections planted in documents and tool responses. Our audit of those five finds no BIPIA attack string, no AgentDojo attack template, and no InjecAgent instruction. It is nevertheless the best detector on both agent benchmarks; what it shares with them is the form of input, structured tool output with planted instructions.
-
-\paragraph{The others.}
-Wolf Defender's card reports evaluation on a benchmark built from AgentDojo's injection payloads; its training data is not public. Prismor was fine-tuned on two prompt-level injection datasets. AgentDojo's templates are explicit instructions addressed to the model (``ignore your previous instructions'', ``this is an important message''), which resemble direct prompt injections; InjecAgent's attacks inside $\tau$-bench product names and BIPIA's attacks inside emails and tables do not. Prismor detects the first and not the others.
+\paragraph{PIGuard and BIPIA}
+PIGuard's published training split contains \PGBipiaRows labeled BIPIA inputs: full emails, tables, and code answers with and without inserted attacks (median \PGBipiaChars characters). Table~\ref{tab:overlap} shows that the verbatim overlap is large: \OvTextTrain text attacks and \OvCodeTrain code attacks from BIPIA's training half appear, as do \OvCleanEmail of BIPIA's clean emails and \OvCleanCode of its clean code contexts. None of BIPIA's test-half attacks appear, and our main results use only those; restricting to them lowers PIGuard's detection at 1\% FPR only from \BISplitPGTrainTpr to \BISplitPGTestTpr, because the two halves come from the same generator and are inserted into the same kinds of content. Training on one half and testing on the other is standard practice, but it yields an in-distribution score.
 
 \begin{table}[t]
 \centering\small
-\caption{Verbatim overlap between BIPIA and PIGuard's published training split (whitespace and case normalized). A lower bound: paraphrases are not counted.}
+\caption{Verbatim overlap between BIPIA and PIGuard's published training split (whitespace and case normalized). The counts are lower bounds, because paraphrases are not counted.}
 \label{tab:overlap}
-\begin{tabular}{@{}lr@{}}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lr@{}}
 \toprule
 BIPIA component & Found in training split \\
 \midrule
@@ -74,46 +61,98 @@ Code attacks, test half & \OvCodeTest \\
 Clean email contexts & \OvCleanEmail \\
 Clean code contexts & \OvCleanCode \\
 Clean table contexts & \OvCleanTable \\
-AgentDojo attack templates & none \\
+AgentDojo attack templates & None \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
-\finding{3}{Detectors work on inputs whose form resembles their training inputs. PIGuard's BIPIA score rests on training on full BIPIA inputs; having seen InjecAgent's attack strings as short prompts does not help it detect them inside tool outputs (\TBSeenPG versus \TBUnseenPG). Horizon-Labs leads both agent benchmarks without any overlap, after training on agent-style inputs.}
+\paragraph{PIGuard and InjecAgent}
+PIGuard's training split also contains \NIASeen InjecAgent attack instructions, but in another form: \PGIARows short prompts (median \PGIAChars characters) that pair an attack with a generic task sentence, not attacks inside tool responses. Within TB-Matched, where every injected output has the same form, this gives a controlled comparison: PIGuard detects \TBSeenPG of the outputs carrying an attack it was trained on and \TBUnseenPG of those carrying one of the \NIAUnseen attacks it was not. Having seen the attack text does not help when the surrounding input is new.
 
-\subsection{RQ4: Task Awareness and Attack Goals}
+\paragraph{Horizon-Labs and the agent benchmarks}
+Horizon-Labs uses BIPIA only for evaluation and removes evaluation texts from its training data, which include five public datasets of injections planted in documents and tool responses. Our audit of those five found no BIPIA attack string, no AgentDojo attack template, and no InjecAgent instruction. It is nevertheless the best detector on both agent benchmarks; what it shares with them is the form of the input, structured tool output with planted instructions.
+
+\paragraph{The other detectors}
+Wolf Defender's card reports evaluation on a benchmark built from AgentDojo's injection payloads, and its training data are not public. Prismor was fine-tuned on two prompt-level injection datasets. AgentDojo's templates are explicit instructions addressed to the model (``ignore your previous instructions''), which resemble direct prompt injections, whereas InjecAgent's attacks in product names and BIPIA's attacks in emails and tables do not; Prismor detects the first kind only.
+
+In summary, detectors work on inputs whose form resembles their training inputs. PIGuard's BIPIA score rests on training on full BIPIA inputs, and having seen InjecAgent's attack strings as short prompts does not help it detect them inside tool outputs (\TBSeenPG versus \TBUnseenPG). Horizon-Labs leads both agent benchmarks without any overlap, after training on agent-style inputs.
+
+\subsection{RQ4: Task awareness and attack goals}
 \label{sec:rq4}
 
-\paragraph{Judges.}
-Telling a general-purpose model the user's request makes it a reasonable detector: at 1\% FPR the Qwen judge catches \ADJQTpr of AD-Matched and \TBTprJQ of TB-Matched injections, and the Llama judge \ADJLTpr and \TBTprJLl. Llama-3.1-8B was trained on data from before AgentDojo existed, so its detection cannot come from memorizing AgentDojo. On both agent benchmarks the judges stay below the best dedicated detectors, at the cost of a 7--8B forward pass per tool output.
+This section addresses RQ4 by giving the user's request to two LLM judges and to Sheltron, and by breaking detection down by attack goal.
 
-\paragraph{Task-aware Sheltron.}
-Passing the user's request to Sheltron in a trusted segment raises its AUROC on AD-Matched from \MSHADAuc to \MSHTADAuc but lowers its detection at 1\% FPR from \MSHAD to \MSHTAD, and raises its false-positive rate on clean tool outputs from \MSHClean to \MSHTClean on AgentDojo and from \TBFPRSH to \TBFPRSHT on $\tau$-bench. This use is undocumented and may simply be out of distribution for the model.
+\paragraph{Judges}
+Telling a general-purpose model the user's request makes it a reasonable detector: at 1\% FPR, the Qwen judge catches \ADJQTpr of AD-Matched and \TBTprJQ of TB-Matched injections, and the Llama judge \ADJLTpr and \TBTprJLl. Llama-3.1-8B was trained on data from before AgentDojo existed, so its detection cannot come from memorization. On both agent benchmarks, the judges stay below the best dedicated detectors.
 
-\paragraph{Attack goals.}
-Figure~\ref{fig:goal} breaks BIPIA's test-half injections into BIPIA's five official groups, each method at its own 1\%-FPR threshold on BIPIA. No approach other than the BIPIA-trained PIGuard covers all groups. Task-irrelevant injections, which ask the model to perform some unrelated harmless task, are the hardest: apart from PIGuard (\GPGIrr), the best approach is Prompt Guard~1 with \GPGoIrr, and every other approach catches at most \GSHIrr. The others split the remaining groups: Sheltron catches \GSHRel of task-relevant and \GSHTgt of targeted injections but \GSHAct of active code attacks, while the Qwen judge catches \GJQPas and \GJQAct of passive and active code attacks and \GJQRel of task-relevant ones. Our judge prompt asks about actions and tells the model not to flag ordinary requests between people; we did not vary it, so we cannot say how much of the judges' gap comes from the question we asked.
+\paragraph{Task-aware Sheltron}
+Passing the user's request to Sheltron in a trusted segment raises its AUROC on AD-Matched from \MSHADAuc to \MSHTADAuc but lowers its detection at 1\% FPR from \MSHAD to \MSHTAD. It also raises its false-positive rate on clean tool outputs from \MSHClean to \MSHTClean on AgentDojo and from \TBFPRSH to \TBFPRSHT on $\tau$-bench. This use is undocumented and may simply be out of distribution for the model.
+
+\paragraph{Attack goals}
+Fig.~\ref{fig:goal} breaks BIPIA's test-half injections down into BIPIA's five official groups, with each method at its own 1\%-FPR threshold on BIPIA. No approach other than the BIPIA-trained PIGuard covers all groups. Task-irrelevant injections, which ask the model to perform an unrelated harmless task, are the hardest: apart from PIGuard (\GPGIrr), the best approach is Prompt Guard~1 (\GPGoIrr), and every other approach catches at most \GSHIrr. The others split the remaining groups: Sheltron catches \GSHRel of task-relevant and \GSHTgt of targeted injections but \GSHAct of active code attacks, while the Qwen judge catches \GJQPas and \GJQAct of passive and active code attacks and \GJQRel of task-relevant ones. Our judge prompt asks about actions, and we did not vary it, so part of the judges' gap may come from the question asked.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.92\textwidth]{figures/fig_goal_many.pdf}
-\caption{Detection by BIPIA attack group (test half), each method at its own 1\%-FPR threshold on BIPIA. Only PIGuard, which was trained on BIPIA inputs, covers all groups; every other approach shown misses most task-irrelevant injections.}
+\includegraphics[width=\textwidth]{figures/fig_goal_many.pdf}
+\caption{Detection by BIPIA attack group (test half), with each method at its own 1\%-FPR threshold on BIPIA. Only PIGuard, which was trained on BIPIA inputs, covers all groups; every other approach shown misses most task-irrelevant injections.}
 \label{fig:goal}
 \end{figure*}
 
-\finding{4}{Task-aware 7--8B judges detect 54--78\% of injections in agent tool outputs at 1\% FPR, below the best dedicated detectors, and giving the user's request to a small classifier does not help. Outside its training distribution, every approach misses whole classes of injections, and task-irrelevant injections evade nearly all of them.}
+In summary, task-aware 7--8B judges detect 54--78\% of injections in agent tool outputs at 1\% FPR, which is below the best dedicated detectors, and giving the user's request to a small classifier does not help. Outside its training distribution, every approach misses whole classes of injections, and task-irrelevant injections evade nearly all of them.
 
-\subsection{RQ5: Format and Metadata}
+\subsection{RQ5: Format and metadata}
 \label{sec:rq5}
 
-How a tool output is presented to a detector moves its false-positive rate. README chunks that PIGuard flags are full of HTML tables, badges, and links rather than instructions; stripping markup lowers its FPR on READMEs from \FmtPGReadmeOrig to \FmtPGReadmePlain and ProtectAI v2's from \FmtPAReadmeOrig to \FmtPAReadmePlain (Figure~\ref{fig:format}). On AD-Matched, removing YAML keys so that PIGuard sees only values lowers its FPR from \ADPGFprHalf to \ADPGNFprHalf at the same TPR (\ADPGTprHalf versus \ADPGNTprHalf). Sheltron's source token has the largest effect: declaring a tool output as \texttt{tool\_result} instead of \texttt{other} lowers its FPR on clean tool outputs from \MSHGClean to \MSHClean on AgentDojo and from \TBFPRSHG to \TBFPRSH on $\tau$-bench.
+This section addresses RQ5 by changing how the same text is presented to a detector. Presentation alone moves false-positive rates. README chunks that PIGuard flags are full of HTML tables, badges, and links rather than instructions; as shown in Fig.~\ref{fig:format}, stripping markup lowers its FPR on READMEs from \FmtPGReadmeOrig to \FmtPGReadmePlain and ProtectAI v2's from \FmtPAReadmeOrig to \FmtPAReadmePlain. On AD-Matched, removing YAML keys so that PIGuard sees only values lowers its FPR from \ADPGFprHalf to \ADPGNFprHalf at the same TPR (\ADPGTprHalf versus \ADPGNTprHalf). Sheltron's source token has the largest effect: declaring a tool output as \texttt{tool\_result} instead of \texttt{other} lowers its FPR on clean tool outputs from \MSHGClean to \MSHClean on AgentDojo and from \TBFPRSHG to \TBFPRSH on $\tau$-bench.
 
 These changes help less at the low-FPR end. With YAML keys removed, PIGuard catches \ADPGNTpr of AD-Matched injections at 1\% FPR and ProtectAI v2 \ADPANTpr. Sheltron with the specific source token catches \MSHAD on AD-Matched, compared with \MSHGAD with the generic one, and \TBTprSH versus \TBTprSHG on TB-Matched. Format and metadata shift a detector's scores; they do not make an out-of-distribution detector work.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_format.pdf}
-\caption{Format alone moves false positives. Left: removing markup from benign READMEs. Right: removing YAML keys from AgentDojo tool outputs (circle: as-is; square: keys removed) lowers PIGuard's FPR threefold at unchanged TPR.}
+\caption{Effect of input format on false positives. (a) Removing markup from benign README chunks. (b) Removing YAML keys from AgentDojo tool outputs (circle: as-is; square: keys removed) lowers PIGuard's FPR threefold at unchanged TPR.}
 \label{fig:format}
 \end{figure}
 
-\finding{5}{Removing serialization markup or declaring the input type lowers default-threshold false positives by up to about twentyfold, a free improvement for deployments, but after any of these changes neither PIGuard nor ProtectAI v2 exceeds 15\% detection at 1\% FPR on AD-Matched.}
+In summary, removing serialization markup or declaring the input type lowers default-threshold false positives by up to about twentyfold, a free improvement for deployments, but after any of these changes neither PIGuard nor ProtectAI v2 exceeds 15\% detection at 1\% FPR on AD-Matched.
+
+\subsection{RQ6: Robustness of the results}
+\label{sec:robust}
+
+This section addresses RQ6. The results so far set each threshold on the evaluated data, report rank correlations without their uncertainty, and use replayed rather than observed tool outputs; we address each in turn.
+
+\paragraph{Thresholds set in advance}
+Table~\ref{tab:heldout} reports detection on AD-Matched under thresholds set in other ways (Section~\ref{sec:method}). Calibrating on all of AD-Clean changes little for most detectors, but because AD-Clean contains every benign AD-Matched output, this is a same-set threshold rather than a held-out one. Leaving a whole suite out is the held-out test and our main result. Under it, the two leading detectors keep their position: Horizon-Labs catches \LoHZTpr of injections in suites it was not calibrated on, at a realized false-positive rate of \LoHZFpr, and Wolf Defender \LoWFTpr at \LoWFFpr. Prompt Guard~2 (86M) drops from \MPGtAD in-sample to \LoPGtTpr, and Prismor from \MPRAD to \LoPRTpr at a realized false-positive rate of \LoPRFpr. A 2\% budget lifts Prompt Guard~2 (86M) to \LoPGtTprTwo, but its threshold does not transfer between suites: calibrated on the other three suites, it flags \LoPGtWsFprTwo of benign workspace outputs, and \LoPGtFprTwo pooled; the 22M model behaves in the same way (\LoPGtsFprTwo). Both models score benign tool outputs far below their default threshold of 0.5, so a low budget places the threshold among densely packed low scores whose position depends on the calibration suites. PIGuard (\LoPGTpr) and ProtectAI v2 (\LoPATpr) stay at the bottom; detectors that gain under the held-out protocol, such as Sentinel v2 (\LoRSTpr at \LoRSFpr), do so only by exceeding the budget.
+
+\begin{table*}[t]
+\centering\small
+\caption{Detection (TPR) and realized false-positive rate (FPR) on AgentDojo under three ways of setting the threshold, in percent. Best value per column in bold.}
+\label{tab:heldout}
+\input{tab_heldout}
+\par\smallskip\footnotesize\raggedright
+In-sample: 1\%-FPR threshold on AD-Matched itself. AD-Clean (not held out): threshold at 1\% of AD-Clean outputs, which contain every benign AD-Matched output. Leave-one-suite-out: threshold on AD-Clean outputs of three suites, TPR and FPR on the fourth, pooled over folds.
+\end{table*}
+
+\paragraph{Uncertainty of rank transfer}
+Resampling the test items barely moves the rank correlations: the 95\% bootstrap interval of $\tau$ is \TauRankCI{} between BIPIA and AgentDojo, \TauADTBCI{} between AgentDojo and $\tau$-bench, \TauBITBCI{} between BIPIA and $\tau$-bench, and \TauFPRADTBCI{} for false-positive rates on tool outputs. The permutation test asks whether these correlations could arise among \NDetectors detectors without any relationship, and only the false-positive correlation passes it ($p\TauFPRADTBPerm$, against $p=\TauADTBPerm$ between the agent benchmarks and $p=\TauRankPerm$ between BIPIA and AgentDojo). The detection rankings are therefore stable for these detectors and agree weakly between the agent benchmarks, but the data cannot establish whether that agreement is general. Neither analysis weakens the BIPIA--AgentDojo result, which rests on detectors that change places.
+
+\paragraph{Replay versus a real agent}
+Replay executes each task's ground-truth calls, whereas a real agent chooses its own. We ran AgentDojo's \EFiveTasks user tasks without attacks with Qwen2.5-7B-Instruct as the agent (served with vLLM, using AgentDojo's prompt-based tool calling) and executed each task's sequence of calls again without a model in a fresh environment. Of the \EFiveCalls outputs the agent received, \EFiveIdenticalN (\EFiveIdentical) were reproduced verbatim; the other \EFiveDiffN came from tools that write data and differed only in a modification timestamp or in the order of a participant list. Replay thus shows a detector exactly what the agent sees for the same calls. The agent's calls matched a ground-truth call in only \EFiveInGT of cases, and it completed \EFiveUtility of the tasks, so a real agent samples different outputs from the same environment. On its \EFiveObsOutputs non-error outputs in \EFiveObsTasks tasks, output-level false-positive rates were close to those on replay: ProtectAI v2 flagged \EFivePAObsFpr (replay: \EFivePARepFpr), PIGuard \EFivePGObsFpr (\EFivePGRepFpr), and Prompt Guard~2 (86M) \EFivePGtObsFpr (\EFivePGtRepFpr). Because this agent made fewer calls per task, fewer tasks were blocked (ProtectAI v2: \EFivePAObsBlock versus \EFivePARepBlock on replay; PIGuard: \EFivePGObsBlock versus \EFivePGRepBlock). Output-level rates carry over; task-level rates depend on how many outputs an agent reads.
+
+In summary, with thresholds calibrated on held-out AgentDojo suites, the agent-oriented detectors keep their lead (Horizon-Labs \LoHZTpr and Wolf Defender \LoWFTpr at about 1\% realized FPR), while Prompt Guard~2's threshold does not transfer between suites, and the false-positive ranking is the only rank correlation that survives a permutation test.
+
+\subsection{RQ7: Cost of screening}
+\label{sec:cost}
+
+This section addresses RQ7 by measuring the inference cost of each method. A detector runs once for every tool output, so its latency adds to every agent step. Table~\ref{tab:cost} reports the time to score one AgentDojo tool output (batch size one, \NCostOutputs outputs) on an \CostGPU GPU and on eight CPU threads. The encoder detectors take \CostEncMinMs to \CostEncMaxMs\,ms per output on the GPU (median) and need \CostEncMinMem\,MB to \CostEncMaxMem\,GB of GPU memory; Horizon-Labs takes \CostHZGpu\,ms and Wolf Defender \CostWFGpu\,ms. On the CPU, the encoders take \CostPGtsCpu to \CostEncMaxCpu\,ms per output at the median, which is small next to the seconds that an LLM call takes, so a detector can run without a GPU. Prismor, a 1.5B generative classifier, takes \CostPRGpu\,ms on the GPU but \CostPRCpu\,ms on the CPU. The 4-bit judges, which score a single generated token, take \CostJQGpu\,ms (Qwen) and \CostJLGpu\,ms (Llama) per output and need \CostJQMem\,GB and \CostJLMem\,GB of GPU memory.
+
+\begin{table*}[t]
+\centering\small
+\caption{Inference cost per tool output (batch size one), sorted by size. Memory is peak GPU memory including weights.}
+\label{tab:cost}
+\input{tab_cost}
+\par\smallskip\footnotesize\raggedright
+The judges' sizes are nominal; they ran on the GPU only.
+\end{table*}
+
+In summary, encoder detectors add tens of milliseconds per tool output on a GPU and remain practical on a CPU, whereas the task-aware 7--8B judges cost several times as much per output and require a GPU, without detecting more injections on the agent benchmarks (Section~\ref{sec:rq4}).

@@ -148,6 +148,98 @@ if os.path.exists("analysis/numbers_many.json"):
             if k in r and r[k] is not None:
                 M[f"M{tag}{nm}"] = f"{r[k]:.2f}" if k.endswith("auroc") else pct(r[k])
 
+# robustness analyses (analysis/compute_robust.py): rank-transfer uncertainty and held-out thresholds
+if os.path.exists("analysis/numbers_robust.json"):
+    NR = json.load(open("analysis/numbers_robust.json"))
+    M["NBoot"] = f"{NR['bootstrap_resamples']:,}".replace(",", "{,}")
+    for key, tag in [("bipia_tpr1_vs_admatched_tpr1", "Rank"), ("admatched_tpr1_vs_tbeval_tpr1", "ADTB"),
+                     ("bipia_tpr1_vs_tbeval_tpr1", "BITB"), ("adclean_fpr_vs_tbeval_fpr05", "FPRADTB")]:
+        r = NR["e1"][key]
+        M[f"Tau{tag}CI"] = f"{r['ci'][0]:.2f} to {r['ci'][1]:.2f}".replace("-", "$-$")
+        M[f"Tau{tag}Perm"] = "<0.001" if r["p_perm"] < 0.001 else f"{r['p_perm']:.2f}"
+    M["AdMatchedBenignInClean"] = pct(NR["check"]["admatched_benign_in_adclean"], 0)
+    for key, tag in [("horizon-base", "HZ"), ("wolf-defender", "WF"), ("prismor-1.5b", "PR"), ("promptguard2-86m", "PGt"),
+                     ("promptguard2-22m", "PGts"), ("qualifire-sentinel", "QS"), ("piguard", "PG"), ("protectai-v2", "PA"),
+                     ("testsavant-large", "TS"), ("rogue-sentinel-v2", "RS"), ("promptguard1-86m", "PGo"), ("jasperls", "JL")]:
+        r = NR["e2"][key]
+        M[f"Cal{tag}Tpr"] = pct(r["clean_tpr1"])
+        M[f"Lo{tag}Tpr"] = pct(r["loso_tpr1"])
+        M[f"Lo{tag}Fpr"] = pct(r["loso_fpr_clean1"])
+        M[f"Lo{tag}TprTwo"] = pct(r["loso_tpr2"])
+        M[f"Lo{tag}FprTwo"] = pct(r["loso_fpr_clean2"])
+        M[f"Lo{tag}MinTprTwo"] = pct(min(s["tpr"] for s in r["loso_suites2"].values()))
+        M[f"Lo{tag}MaxFprTwo"] = pct(max(s["fpr_clean"] for s in r["loso_suites2"].values()))
+    M["LoPGtWsFprTwo"] = pct(NR["e2"]["promptguard2-86m"]["loso_suites2"]["workspace"]["fpr_clean"])
+
+# community-benchmark setting and rebuild check (analysis/compute_e6.py)
+if os.path.exists("analysis/numbers_e6.json"):
+    NE = json.load(open("analysis/numbers_e6.json"))
+    M["ReproMaxDiff"] = f"{max(NE[k][d] for k in ['check_piguard', 'check_promptguard2-86m'] for d in ['adclean_max_abs_diff', 'admatched_benign_max_abs_diff']):.3f}"
+    M["PGtRebuiltTpr"] = pct(NE["check_promptguard2-86m"]["admatched_tpr1_rebuilt"])
+    M["PGRebuiltTpr"] = pct(NE["check_piguard"]["admatched_tpr1_rebuilt"])
+    for tag, k in [("Seg", "seg"), ("Ovl", "ovl"), ("Task", "task")]:
+        r = NE[k]
+        M[f"Comm{tag}Default"] = pct(r["default_tpr"])
+        M[f"Comm{tag}TprOne"] = pct(r["tpr1"])
+        M[f"Comm{tag}LoTpr"] = pct(r["loso2_tpr"])
+        M[f"Comm{tag}LoMin"] = pct(r["loso2_min_tpr"])
+        M[f"Comm{tag}LoFpr"] = pct(r["loso2_fpr"])
+        M[f"Comm{tag}LoMaxFpr"] = pct(r["loso2_max_fpr"])
+        M[f"Comm{tag}LoII"] = pct(r["loso2_tpr_ii"])
+        M[f"Comm{tag}LoIIMin"] = pct(r["loso2_min_tpr_ii"])
+        for a, at in [("important_instructions", "II"), ("direct", "Dir"), ("ignore_previous", "Ign")]:
+            M[f"Comm{tag}Default{at}"] = pct(r["by_template_default_tpr"][a])
+            M[f"Comm{tag}One{at}"] = pct(r["by_template_tpr1"][a])
+
+# replay validity on a real agent run (scripts/e5_compare.py, scripts/e5_score.py)
+if os.path.exists("results/e5_summary.json") and os.path.exists("results/e5_detectors.json"):
+    S5 = json.load(open("results/e5_summary.json"))
+    M["EFiveTasks"] = str(S5["tasks"])
+    M["EFiveCalls"] = f"{S5['calls']:,}".replace(",", "{,}")
+    M["EFiveIdentical"] = pct(S5["identical"] / S5["calls"])
+    M["EFiveIdenticalN"] = f"{S5['identical']:,}".replace(",", "{,}")
+    M["EFiveInGT"] = pct(S5["in_ground_truth"] / S5["calls"])
+    M["EFiveErrors"] = pct(S5["errors"] / S5["calls"])
+    M["EFiveUtility"] = pct(S5["utility"] / S5["tasks"])
+    M["EFiveDiffN"] = str(S5["calls"] - S5["identical"])
+    D5 = json.load(open("results/e5_detectors.json"))
+    M["EFiveObsOutputs"] = str(D5["protectai-v2"]["observed"]["n_outputs"])
+    M["EFiveObsTasks"] = str(D5["protectai-v2"]["observed"]["n_tasks"])
+    for key, tag in [("protectai-v2", "PA"), ("piguard", "PG"), ("promptguard2-86m", "PGt"), ("horizon-base", "HZ"),
+                     ("qualifire-sentinel", "QS"), ("testsavant-large", "TS")]:
+        if key in D5:
+            M[f"EFive{tag}ObsFpr"] = pct(D5[key]["observed"]["output_fpr"])
+            M[f"EFive{tag}ObsBlock"] = pct(D5[key]["observed"]["task_block"])
+            M[f"EFive{tag}RepFpr"] = pct(D5[key]["replay"]["output_fpr"])
+            M[f"EFive{tag}RepBlock"] = pct(D5[key]["replay"]["task_block"])
+
+# inference cost (scripts/latency.py)
+if os.path.exists("results/latency.json"):
+    L = json.load(open("results/latency.json"))
+    enc = [k for k in L if not k.startswith("judge")]
+    M["CostGPU"] = L[enc[0]]["gpu_name"].replace("NVIDIA ", "")
+    M["NCostOutputs"] = str(L[enc[0]]["gpu"]["n"])
+    encs = [k for k in enc if k != "prismor-1.5b"]
+    M["CostEncMaxCpu"] = f"{max(L[k]['cpu']['median_ms'] for k in encs):.0f}"
+    M["CostEncMaxMem"] = f"{max(L[k]['gpu']['peak_mem_mb'] for k in encs) / 1024:.1f}"
+    M["CostEncMinMem"] = f"{min(L[k]['gpu']['peak_mem_mb'] for k in encs):.0f}"
+    for key, tag in [("judge-qwen", "JQ"), ("judge-llama", "JL")]:
+        if key in L:
+            M[f"Cost{tag}Mem"] = f"{L[key]['gpu']['peak_mem_mb'] / 1024:.1f}"
+    M["CostEncMaxMs"] = f"{max(L[k]['gpu']['median_ms'] for k in enc if k != 'prismor-1.5b'):.0f}"
+    M["CostEncMinMs"] = f"{min(L[k]['gpu']['median_ms'] for k in enc):.0f}"
+    for key, tag in [("horizon-base", "HZ"), ("wolf-defender", "WF"), ("promptguard2-86m", "PGt"),
+                     ("promptguard2-22m", "PGts"), ("prismor-1.5b", "PR"), ("judge-qwen", "JQ"), ("judge-llama", "JL"),
+                     ("piguard", "PG"), ("protectai-v2", "PA")]:
+        if key in L:
+            M[f"Cost{tag}Gpu"] = f"{L[key]['gpu']['median_ms']:.0f}"
+            if L[key].get("cpu"):
+                M[f"Cost{tag}Cpu"] = f"{L[key]['cpu']['median_ms']:,.0f}".replace(",", "{,}")
+
+if os.path.exists("results/horizon_revision_check.json"):
+    HR = json.load(open("results/horizon_revision_check.json"))["revisions"]
+    M["HZvTwoFlagged"] = str(HR["e4fbfc6f603e24c675cdf310c3b8d7abaa825666"]["flagged_at_05"])
+
 with open("paper/numbers.tex", "w") as f:
     f.write("% Generated by analysis/make_macros.py from analysis/numbers.json. Do not edit.\n")
     for k, v in sorted(M.items()):

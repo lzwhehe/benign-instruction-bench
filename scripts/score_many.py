@@ -42,7 +42,6 @@ DETECTORS = {
     "protectai-small-v2": ("protectai/deberta-v3-small-prompt-injection-v2", "cls", 512, 1, False),
 }
 OUT = "results/many"
-os.makedirs(OUT, exist_ok=True)
 BS = 16
 
 
@@ -163,35 +162,41 @@ def run_prismor(repo, max_len, texts):
     return probs, trunc / len(texts)
 
 
-names = list(DETECTORS) if sys.argv[1:] == ["all"] else sys.argv[1:]
-for name in names:
-    repo, kind, max_len, idx, remote = DETECTORS[name]
-    for sname, path in SETS.items():
-        out = f"{OUT}/{name}__{sname}.json"
-        if os.path.exists(out):
-            continue
-        rows = load(path)
-        texts = [r["text"] for r in rows]
-        try:
-            if kind == "cls":
-                p, tr = run_cls(repo, max_len, idx, remote, texts)
-            elif kind in ("seg", "seg-pg1"):
-                p, tr = run_segmented(repo, max_len, texts, pg1=(kind == "seg-pg1"))
-            elif kind.startswith("sheltron"):
-                p, tr = run_sheltron(repo, max_len, rows, kind == "sheltron-task", kind == "sheltron-generic")
-            else:
-                p, tr = run_prismor(repo, max_len, texts)
-        except Exception as e:  # keep going with the other detectors; the failure is reported
-            print(f"{name:20s} {sname:10s} FAILED: {type(e).__name__}: {str(e)[:200]}", flush=True)
-            break
-        labels = [r["label"] for r in rows] if "label" in rows[0] else None
-        json.dump(dict(detector=name, repo=repo, set=sname, probs=p, labels=labels, truncated=tr), open(out, "w"))
-        f = np.array(p) >= 0.5
-        msg = f"{name:20s} {sname:10s} n={len(p):5d} trunc={tr:.3f} flag@0.5={f.mean():.3f}"
-        if labels:
-            y = np.array(labels)
-            from sklearn.metrics import roc_auc_score, roc_curve
-            fpr, tpr, _ = roc_curve(y, p)
-            msg += f" AUROC={roc_auc_score(y, p):.3f} TPR@1%={tpr[fpr <= 0.01].max():.3f}"
-        print(msg, flush=True)
-        torch.cuda.empty_cache()
+def main():
+    os.makedirs(OUT, exist_ok=True)
+    names = list(DETECTORS) if sys.argv[1:] == ["all"] else sys.argv[1:]
+    for name in names:
+        repo, kind, max_len, idx, remote = DETECTORS[name]
+        for sname, path in SETS.items():
+            out = f"{OUT}/{name}__{sname}.json"
+            if os.path.exists(out):
+                continue
+            rows = load(path)
+            texts = [r["text"] for r in rows]
+            try:
+                if kind == "cls":
+                    p, tr = run_cls(repo, max_len, idx, remote, texts)
+                elif kind in ("seg", "seg-pg1"):
+                    p, tr = run_segmented(repo, max_len, texts, pg1=(kind == "seg-pg1"))
+                elif kind.startswith("sheltron"):
+                    p, tr = run_sheltron(repo, max_len, rows, kind == "sheltron-task", kind == "sheltron-generic")
+                else:
+                    p, tr = run_prismor(repo, max_len, texts)
+            except Exception as e:  # keep going with the other detectors; the failure is reported
+                print(f"{name:20s} {sname:10s} FAILED: {type(e).__name__}: {str(e)[:200]}", flush=True)
+                break
+            labels = [r["label"] for r in rows] if "label" in rows[0] else None
+            json.dump(dict(detector=name, repo=repo, set=sname, probs=p, labels=labels, truncated=tr), open(out, "w"))
+            f = np.array(p) >= 0.5
+            msg = f"{name:20s} {sname:10s} n={len(p):5d} trunc={tr:.3f} flag@0.5={f.mean():.3f}"
+            if labels:
+                y = np.array(labels)
+                from sklearn.metrics import roc_auc_score, roc_curve
+                fpr, tpr, _ = roc_curve(y, p)
+                msg += f" AUROC={roc_auc_score(y, p):.3f} TPR@1%={tpr[fpr <= 0.01].max():.3f}"
+            print(msg, flush=True)
+            torch.cuda.empty_cache()
+
+
+if __name__ == "__main__":
+    main()

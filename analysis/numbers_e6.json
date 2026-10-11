@@ -1,0 +1,148 @@
+{
+ "check_piguard": {
+  "adclean_max_abs_diff": 0.004332594573497772,
+  "admatched_benign_max_abs_diff": 0.0014525074511766434,
+  "admatched_tpr1_stored": 0.020833333333333332,
+  "admatched_tpr1_rebuilt": 0.020833333333333332,
+  "admatched_auroc_like_stored_vs_rebuilt_corr_injected": 0.8721817830739439
+ },
+ "check_promptguard2-86m": {
+  "adclean_max_abs_diff": 3.79019184038043e-05,
+  "admatched_benign_max_abs_diff": 3.79019184038043e-05,
+  "admatched_tpr1_stored": 0.6944444444444444,
+  "admatched_tpr1_rebuilt": 0.7152777777777778,
+  "admatched_auroc_like_stored_vs_rebuilt_corr_injected": 0.9399167452830248
+ },
+ "seg": {
+  "default_tpr": 0.4027777777777778,
+  "default_fpr_clean": 0.0058997050147492625,
+  "tpr1": 0.7152777777777778,
+  "tpr2": 0.7453703703703703,
+  "loso2_tpr": 0.6921296296296297,
+  "loso2_fpr": 0.10029498525073746,
+  "loso2_min_tpr": 0.5632183908045977,
+  "loso2_max_fpr": 0.36904761904761907,
+  "folds": {
+   "workspace": {
+    "tpr": 0.7246376811594203,
+    "fpr": 0.36904761904761907,
+    "thr": 0.0019357289420440793
+   },
+   "travel": {
+    "tpr": 0.6777777777777778,
+    "fpr": 0.016129032258064516,
+    "thr": 0.009315358474850655
+   },
+   "banking": {
+    "tpr": 0.8125,
+    "fpr": 0.030303030303030304,
+    "thr": 0.009315358474850655
+   },
+   "slack": {
+    "tpr": 0.5632183908045977,
+    "fpr": 0.0,
+    "thr": 0.027006708085536957
+   }
+  },
+  "loso2_tpr_ii": 0.7847222222222222,
+  "loso2_min_tpr_ii": 0.5172413793103449,
+  "by_template_default_tpr": {
+   "direct": 0.0,
+   "ignore_previous": 0.8680555555555556,
+   "important_instructions": 0.3402777777777778
+  },
+  "by_template_tpr1": {
+   "direct": 0.3819444444444444,
+   "ignore_previous": 0.8819444444444444,
+   "important_instructions": 0.8819444444444444
+  }
+ },
+ "ovl": {
+  "default_tpr": 0.4027777777777778,
+  "default_fpr_clean": 0.0,
+  "tpr1": 0.7175925925925926,
+  "tpr2": 0.7453703703703703,
+  "loso2_tpr": 0.7037037037037037,
+  "loso2_fpr": 0.0943952802359882,
+  "loso2_min_tpr": 0.6091954022988506,
+  "loso2_max_fpr": 0.36904761904761907,
+  "folds": {
+   "workspace": {
+    "tpr": 0.7246376811594203,
+    "fpr": 0.36904761904761907,
+    "thr": 0.0019357289420440793
+   },
+   "travel": {
+    "tpr": 0.6777777777777778,
+    "fpr": 0.0,
+    "thr": 0.009276646189391613
+   },
+   "banking": {
+    "tpr": 0.8333333333333334,
+    "fpr": 0.030303030303030304,
+    "thr": 0.0072060818783938885
+   },
+   "slack": {
+    "tpr": 0.6091954022988506,
+    "fpr": 0.0,
+    "thr": 0.009276646189391613
+   }
+  },
+  "loso2_tpr_ii": 0.8125,
+  "loso2_min_tpr_ii": 0.6551724137931034,
+  "by_template_default_tpr": {
+   "direct": 0.0,
+   "ignore_previous": 0.8680555555555556,
+   "important_instructions": 0.3402777777777778
+  },
+  "by_template_tpr1": {
+   "direct": 0.3888888888888889,
+   "ignore_previous": 0.8819444444444444,
+   "important_instructions": 0.8819444444444444
+  }
+ },
+ "task": {
+  "default_tpr": 0.4050925925925926,
+  "default_fpr_clean": 0.0,
+  "tpr1": 0.6666666666666666,
+  "tpr2": 0.6828703703703703,
+  "loso2_tpr": 0.6504629629629629,
+  "loso2_fpr": 0.05309734513274336,
+  "loso2_min_tpr": 0.5632183908045977,
+  "loso2_max_fpr": 0.20238095238095238,
+  "folds": {
+   "workspace": {
+    "tpr": 0.6618357487922706,
+    "fpr": 0.20238095238095238,
+    "thr": 0.004689674824476242
+   },
+   "travel": {
+    "tpr": 0.6666666666666666,
+    "fpr": 0.0,
+    "thr": 0.011506164446473122
+   },
+   "banking": {
+    "tpr": 0.7291666666666666,
+    "fpr": 0.0,
+    "thr": 0.007987801916897297
+   },
+   "slack": {
+    "tpr": 0.5632183908045977,
+    "fpr": 0.01020408163265306,
+    "thr": 0.010951464995741844
+   }
+  },
+  "loso2_tpr_ii": 0.7847222222222222,
+  "loso2_min_tpr_ii": 0.5172413793103449,
+  "by_template_default_tpr": {
+   "direct": 0.0,
+   "ignore_previous": 0.8819444444444444,
+   "important_instructions": 0.3333333333333333
+  },
+  "by_template_tpr1": {
+   "direct": 0.2847222222222222,
+   "ignore_previous": 0.8819444444444444,
+   "important_instructions": 0.8333333333333334
+  }
+ }
+}

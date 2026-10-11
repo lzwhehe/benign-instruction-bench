@@ -1,0 +1,15 @@
+{
+ "repo": "Horizon-Labs/prompt-injection-guard-base",
+ "set": "adclean",
+ "n": 339,
+ "revisions": {
+  "af3c52e6a9d8bccc8e8c3ed4ba9d7fa084a47e33": {
+   "max_abs_diff_vs_stored": 0.0,
+   "flagged_at_05": 0
+  },
+  "e4fbfc6f603e24c675cdf310c3b8d7abaa825666": {
+   "max_abs_diff_vs_stored": 0.6544,
+   "flagged_at_05": 2
+  }
+ }
+}

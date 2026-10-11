@@ -1,0 +1,61 @@
+% Overview of the study (Fig. 1). Plain TikZ with the libraries positioning, arrows.meta, fit only.
+\begin{tikzpicture}[
+  x=1cm, y=1cm,
+  stage/.style={rounded corners=3pt, draw=none},
+  head/.style={font=\scriptsize\bfseries, align=center, text width=2.45cm},
+  item/.style={draw=black!45, rounded corners=1.5pt, fill=white, font=\scriptsize, align=center,
+               text width=2.25cm, inner sep=2pt, minimum height=0.62cm},
+  note/.style={font=\scriptsize\itshape, align=center, text width=2.4cm, text=black!70},
+  arr/.style={-{Stealth[length=4pt]}, thick, draw=black!55}]
+% stage backgrounds (drawn first)
+\fill[stage, fill=blue!7]   (0.00,0) rectangle (2.55,7.0);
+\fill[stage, fill=orange!9] (2.85,0) rectangle (5.40,7.0);
+\fill[stage, fill=green!7]  (5.70,0) rectangle (8.25,7.0);
+\fill[stage, fill=violet!7] (8.55,0) rectangle (11.10,7.0);
+\fill[stage, fill=black!6]  (11.40,0) rectangle (13.95,7.0);
+% headers
+\node[head] at (1.275,6.65) {1. Data sources};
+\node[head] at (4.125,6.65) {2. Evaluation sets};
+\node[head] at (6.975,6.65) {3. Scoring};
+\node[head] at (9.825,6.65) {4. Thresholds};
+\node[head] at (12.675,6.65) {5. Analyses};
+% 1. sources
+\node[item] (s1) at (1.275,5.75) {AgentDojo v1.2\\4 suites, ground truth};
+\node[item] (s2) at (1.275,4.75) {$\tau$-bench\\retail, airline};
+\node[item] (s3) at (1.275,3.75) {InjecAgent\\62 attacks};
+\node[item] (s4) at (1.275,2.75) {BIPIA\\email, table, code};
+\node[item] (s5) at (1.275,1.75) {README, email,\\web text};
+\node[note] at (1.275,0.75) {public benchmarks, rebuilt by scripts};
+% 2. sets
+\node[item] (d1) at (4.125,5.75) {AD-Clean (benign)\\AD-Matched, AD-Shift};
+\node[item] (d2) at (4.125,4.25) {TB-Clean (benign)\\TB-Matched};
+\node[item] (d4) at (4.125,2.75) {BIPIA pairs\\test-half attacks};
+\node[item] (d5) at (4.125,1.75) {General text\\(benign only)};
+\node[note] at (4.125,0.75) {LLM-free replay; differential labels};
+% 3. scoring
+\node[item, minimum height=1.6cm] (m1) at (6.975,4.9) {15 released detectors\\(DeBERTa, ModernBERT, Qwen-based; 2023--2026)};
+\node[item, minimum height=1.1cm] (m2) at (6.975,2.9) {2 task-aware LLM judges (4-bit)};
+\node[note] at (6.975,0.75) {each run as its model card documents};
+% 4. thresholds
+\node[item] (t1) at (9.825,5.75) {Default threshold\\(0.5)};
+\node[item] (t2) at (9.825,4.5) {1\% FPR,\\in-sample};
+\node[item] (t3) at (9.825,3.25) {1\% / 2\% budget,\\held-out suites};
+\node[note] at (9.825,0.75) {FPR per output and per task};
+% 5. analyses
+\node[item, text width=2.3cm] (a1) at (12.675,5.95) {RQ1 false positives};
+\node[item, text width=2.3cm] (a2) at (12.675,5.2) {RQ2 rank transfer};
+\node[item, text width=2.3cm] (a3) at (12.675,4.45) {RQ3 training data};
+\node[item, text width=2.3cm] (a4) at (12.675,3.7) {RQ4 task awareness};
+\node[item, text width=2.3cm] (a5) at (12.675,2.95) {RQ5 input format};
+\node[item, text width=2.3cm] (a6) at (12.675,2.2) {RQ6 robustness};
+\node[item, text width=2.3cm] (a7) at (12.675,1.45) {RQ7 cost};
+% arrows
+\draw[arr] (s1.east) -- (d1.west);
+\draw[arr] (s2.east) -- (d2.west);
+\draw[arr] (s3.east) -- (d2.west);
+\draw[arr] (s4.east) -- (d4.west);
+\draw[arr] (s5.east) -- (d5.west);
+\draw[arr] (5.40,3.75) -- (5.70,3.75);
+\draw[arr] (8.25,3.75) -- (8.55,3.75);
+\draw[arr] (11.10,3.75) -- (11.40,3.75);
+\end{tikzpicture}

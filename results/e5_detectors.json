@@ -1,0 +1,86 @@
+{
+ "protectai-v2": {
+  "observed": {
+   "output_fpr": 0.30808080808080807,
+   "task_block": 0.547945205479452,
+   "n_outputs": 198,
+   "n_tasks": 73
+  },
+  "replay": {
+   "output_fpr": 0.3008849557522124,
+   "task_block": 0.6907216494845361,
+   "n_outputs": 339,
+   "n_tasks": 97
+  }
+ },
+ "piguard": {
+  "observed": {
+   "output_fpr": 0.29292929292929293,
+   "task_block": 0.4520547945205479,
+   "n_outputs": 198,
+   "n_tasks": 73
+  },
+  "replay": {
+   "output_fpr": 0.2949852507374631,
+   "task_block": 0.5979381443298969,
+   "n_outputs": 339,
+   "n_tasks": 97
+  }
+ },
+ "promptguard2-86m": {
+  "observed": {
+   "output_fpr": 0.005050505050505051,
+   "task_block": 0.0136986301369863,
+   "n_outputs": 198,
+   "n_tasks": 73
+  },
+  "replay": {
+   "output_fpr": 0.0058997050147492625,
+   "task_block": 0.020618556701030927,
+   "n_outputs": 339,
+   "n_tasks": 97
+  }
+ },
+ "horizon-base": {
+  "observed": {
+   "output_fpr": 0.015151515151515152,
+   "task_block": 0.0410958904109589,
+   "n_outputs": 198,
+   "n_tasks": 73
+  },
+  "replay": {
+   "output_fpr": 0.0058997050147492625,
+   "task_block": 0.020618556701030927,
+   "n_outputs": 339,
+   "n_tasks": 97
+  }
+ },
+ "qualifire-sentinel": {
+  "observed": {
+   "output_fpr": 0.015151515151515152,
+   "task_block": 0.0410958904109589,
+   "n_outputs": 198,
+   "n_tasks": 73
+  },
+  "replay": {
+   "output_fpr": 0.008849557522123894,
+   "task_block": 0.030927835051546393,
+   "n_outputs": 339,
+   "n_tasks": 97
+  }
+ },
+ "testsavant-large": {
+  "observed": {
+   "output_fpr": 0.03535353535353535,
+   "task_block": 0.0958904109589041,
+   "n_outputs": 198,
+   "n_tasks": 73
+  },
+  "replay": {
+   "output_fpr": 0.032448377581120944,
+   "task_block": 0.10309278350515463,
+   "n_outputs": 339,
+   "n_tasks": 97
+  }
+ }
+}

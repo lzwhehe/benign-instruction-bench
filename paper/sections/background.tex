@@ -1,15 +1,15 @@
-\section{Background and Motivating Example}
+\section{Background}
 \label{sec:background}
 
-\paragraph{Indirect prompt injection.}
-An LLM agent cannot tell instructions from data by position alone: text that a tool returns can redirect the model as easily as text the user typed~\cite{greshake2023,liu2024formalizing}. Defenses fall into three families. Model-level defenses train the model to ignore instructions in the data region~\cite{struq,secalign}. System-level defenses keep untrusted data away from the component that plans actions~\cite{camel}. Detection-based defenses run a separate classifier on untrusted text and drop what it flags~\cite{protectai,piguard,promptshield,datasentinel}. Detectors are the easiest to adopt, because they need no change to the agent or the model, and they are the subject of this paper.
+\subsection{Indirect prompt injection and detection-based defenses}
+An LLM agent cannot tell instructions from data by position alone: text that a tool returns can redirect the model as easily as text the user typed~\cite{greshake2023,liu2024formalizing}. Defenses fall into three families. Model-level defenses train the model to ignore instructions in the data region~\cite{struq,secalign}. System-level defenses keep untrusted data away from the component that plans actions~\cite{camel}. Detection-based defenses run a separate classifier on untrusted text and drop what it flags~\cite{piguard,promptshield,datasentinel,llamafirewall}. Detectors are the easiest to adopt, because they need no change to the agent or the model, and they are the subject of this study.
 
-\paragraph{How detectors are evaluated.}
-Detector papers report accuracy on collections of prompts and injected documents, often including BIPIA~\cite{bipia} and the over-defense set NotInject~\cite{piguard}. Practitioners compare released detectors the same way: a 2025 evaluation of nine open guardrails used BIPIA's email and table tasks and concluded that PIGuard detects indirect injection effectively~\cite{mozillaguardrails}. Two questions are left open by this practice. The text in these collections is not what an agent's detector sees, which is serialized tool output. And nothing checks whether the benchmark overlaps with what the detector was trained on.
+Detector papers and practitioners report accuracy on collections of prompts and injected documents, often including BIPIA~\cite{bipia} and the over-defense set NotInject~\cite{piguard}. That text is not the serialized tool output an agent's detector sees, and nothing checks whether it overlaps with the detector's training data. The running example shows both gaps.
 
-\begin{figure}[t]
+\subsection{Running example}
+
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
   box/.style={draw, rounded corners=2pt, align=left, font=\scriptsize, inner sep=3pt, text width=#1},
   box/.default=3.0cm,
@@ -20,21 +20,34 @@ Detector papers report accuracy on collections of prompts and injected documents
 \node[box=3.6cm, below=0.55cm of u, fill=green!6, xshift=0.2cm] (o1) {\texttt{update\_password} returns\\\texttt{\{'message': 'Password updated.'\}}};
 \node[box=3.6cm, below=0.25cm of o1, fill=red!6] (o2) {\texttt{search\_calendar\_events} returns an event whose description contains text planted by an attacker.};
 \node[box=2.2cm, right=0.5cm of o1, yshift=-0.55cm, fill=orange!10, align=center] (d) {\textbf{Detector}\\screens each\\tool output};
-\node[box=2.6cm, right=0.45cm of d, yshift=0.55cm, fill=green!3] (r1) {\textbf{Blocked.} PIGuard score 1.00: a benign output stops the task.};
-\node[box=2.6cm, right=0.45cm of d, yshift=-0.55cm, fill=red!3] (r2) {\textbf{Passed.} At a 1\% FPR threshold, both detectors let almost every such output through.};
+\node[box=2.6cm, right=0.45cm of d, yshift=0.8cm, fill=green!3] (r1) {\textbf{Blocked.} PIGuard score 1.00: a benign output stops the task.};
+\node[box=2.6cm, right=0.45cm of d, yshift=-0.8cm, fill=red!3] (r2) {\textbf{Passed.} At a 1\% FPR threshold, both detectors let almost every such output through.};
 \draw[arr] (u) -- (a);
 \draw[arr] (a.south) |- ([yshift=0.15cm]o1.east);
 \draw[arr] (o1.east) -- (d);
 \draw[arr] (o2.east) -- (d);
 \draw[arr] (d.east) -- (r1.west);
 \draw[arr] (d.east) -- (r2.west);
-\end{tikzpicture}}
-\caption{Running example. A detector between the tools and the agent blocks a harmless confirmation message (top) and, once its threshold is set to keep false alarms rare, passes almost every injected output (bottom). Both outputs come from AgentDojo; the scores are measured (\S\ref{sec:rq1}, \S\ref{sec:rq2}).}
+\end{tikzpicture}
+\caption{Running example. A detector between the tools and the agent blocks a harmless confirmation message (top) and, once its threshold is set to keep false alarms rare, passes almost every injected output (bottom). Both outputs come from AgentDojo, and the scores are measured (Sections~\ref{sec:rq1} and~\ref{sec:rq2}).}
 \label{fig:example}
-\end{figure}
+\end{figure*}
 
-\paragraph{Running example.}
-Figure~\ref{fig:example} shows an AgentDojo banking task. The user asks the agent to update a password and pay a bill. The password tool returns \texttt{\{'message': 'Password updated.'\}}, and PIGuard scores this output 1.00, so a deployment that drops flagged outputs fails a task in which nothing malicious happened. In a workspace task, a calendar event carries a description that an attacker wrote. At their default thresholds the detectors catch many such outputs, but they pay for it with false alarms on a fifth of all benign tool outputs. Once the threshold is moved to keep false alarms at 1\%, almost every injected output passes. Yet on BIPIA, the same PIGuard model catches nearly every injection at the same false-alarm rate. Detectors built for agent inputs show the mirror image: no false alarm on the password confirmation, most AgentDojo injections caught, and most BIPIA injections missed. The rest of this paper explains the pattern.
+In the AgentDojo banking task of Fig.~\ref{fig:example}, the password tool returns \texttt{\{'message': 'Password updated.'\}}, and PIGuard scores this output 1.00, so a deployment that drops flagged outputs fails a task in which nothing malicious happened. In a workspace task, a calendar event carries a description that an attacker wrote. At their default thresholds, ProtectAI v2 and PIGuard catch many such outputs but flag a fifth of all benign tool outputs; at a threshold that keeps false alarms at 1\%, almost every injected output passes. Yet on BIPIA, PIGuard catches nearly every injection at the same false-alarm rate, while detectors built for agent inputs show the mirror image. The rest of this paper explains the pattern.
 
-\paragraph{Why not just pick a better threshold, or a bigger model?}
-Thresholds trade one failure for the other; the question is whether any threshold gives both low FPR and useful detection, which is what TPR at 1\% FPR measures. A bigger general-purpose model can serve as a judge, and we test two such judges; but a judge's verdict depends on what it is asked, and \S\ref{sec:rq4} shows that the question we ask covers some attack goals and not others.
+A better threshold does not remove the problem, because thresholds trade one failure for the other; the question is whether any threshold gives both a low false-positive rate and useful detection, which the true-positive rate (TPR) at 1\% FPR measures. A bigger model can serve as a judge, but its verdict depends on what it is asked (Section~\ref{sec:rq4}).
+
+\subsection{Threat model and evaluation scope}
+\label{sec:threat}
+
+\paragraph{System model}
+A user gives an LLM agent a task in natural language. The agent calls tools (email search, calendar lookup, transaction history, web pages, file reads) and appends each tool output to its context. A \emph{detector} screens every tool output before it enters the context; if it flags an output, the deployment drops the output or stops the task and asks a human. Either way, a flagged benign output costs the user the task, so we count a task as \emph{blocked} if any of its tool outputs is flagged. This is the configuration of detector-based defenses in agent frameworks, including the detector baseline that AgentDojo ships~\cite{agentdojo} and the scanner layer of LlamaFirewall~\cite{llamafirewall}.
+
+\paragraph{Attacker capabilities and goals}
+The attacker controls part of the data that some tool returns (\textbf{A1}): a calendar event description, an email body, a review on a booking site, a table cell, or an answer on a question-and-answer site. The attacker cannot change the user's request, the agent, or the detector. We distinguish attacks by goal, following BIPIA's taxonomy~\cite{bipia}: \emph{action} goals make the agent do something consequential (send money, forward a file, run code); \emph{task-irrelevant} goals make it perform an unrelated task; and \emph{task-relevant} goals change how it answers the user's own task (reverse the text, answer in Base64).
+
+\paragraph{Security goals of the detector}
+\textbf{G1}: benign tool outputs pass, so that tasks are not blocked. \textbf{G2}: injected tool outputs are flagged at an operating point that satisfies G1.
+
+\paragraph{Scope}
+We measure detectors against the static attacks that public benchmarks ship. An adaptive attacker who targets a specific detector would lower detection rates further~\cite{attackermovessecond}, so our detection numbers are upper bounds. We do not propose a new defense; the task-aware judges of Section~\ref{sec:setup} serve as a diagnostic that separates what the benchmark measures from what the detector learned.

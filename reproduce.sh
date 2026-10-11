@@ -3,6 +3,8 @@
 # Needs: one CUDA GPU (>=20 GB for the 4-bit judges), ~20 GB disk, Python 3.12 env from requirements.txt,
 # a separate Python env with agentdojo==0.1.34 (AGENTDOJO_PY), and local copies of the two judge models.
 set -euo pipefail
+# collect_agentdojo_pairs.py assigns injection tasks with hash(); fix the seed so injected texts are reproducible
+export PYTHONHASHSEED=0
 AGENTDOJO_PY=${AGENTDOJO_PY:?path to a python that has agentdojo installed}
 QWEN=${QWEN:?path to Qwen2.5-7B-Instruct}
 LLAMA=${LLAMA:?path to Llama-3.1-8B-Instruct}
@@ -50,8 +52,23 @@ ${TRANSFORMERS5_PY:-python} scripts/score_many.py wolf-defender
 python scripts/audit_horizon.py   # needs ~/agentsec/BIPIA
 python scripts/audit_injecagent.py
 
-# 7. every number, table and figure in the paper
+# 7. robustness and cost (JISA revision): community-benchmark setting for Prompt Guard 2, inference cost,
+#    and a real-agent run (needs vLLM serving Qwen2.5-7B-Instruct on localhost:8000) for the replay check
+python scripts/score_e6.py
+python scripts/latency.py results/latency.json protectai-v1 protectai-v2 protectai-small-v2 jasperls testsavant-large \
+  piguard promptguard1-86m promptguard2-22m promptguard2-86m qualifire-sentinel rogue-sentinel-v2 sheltron horizon-base \
+  prismor-1.5b judge-qwen judge-llama
+${TRANSFORMERS5_PY:-python} scripts/latency.py results/latency.json wolf-defender
+if [ -n "${RUN_AGENT:-}" ]; then
+  $AGENTDOJO_PY scripts/e5_run.py --model LOCAL --benchmark-version v1.2 --logdir e5_runs \
+    -s workspace -s travel -s banking -s slack
+  $AGENTDOJO_PY scripts/e5_compare.py e5_runs e5_observed_outputs.jsonl
+  python scripts/e5_score.py e5_observed_outputs.jsonl results/e5_detectors.json
+fi
+
+# 8. every number, table and figure in the paper
 python analysis/compute_all.py
 python analysis/compute_many.py
+python analysis/compute_robust.py
 python analysis/make_macros.py
 echo "done: analysis/numbers.json, analysis/figures/, paper/numbers.tex"

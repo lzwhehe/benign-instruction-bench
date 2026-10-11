@@ -1,0 +1,264 @@
+{
+ "protectai-v1": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 184423682,
+  "gpu": {
+   "median_ms": 14.130488969385624,
+   "p95_ms": 19.90281604230404,
+   "n": 200,
+   "peak_mem_mb": 814.86865234375
+  },
+  "cpu": {
+   "median_ms": 55.32766226679087,
+   "p95_ms": 296.52624763548374,
+   "n": 50
+  }
+ },
+ "protectai-v2": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 184423682,
+  "gpu": {
+   "median_ms": 14.127499423921108,
+   "p95_ms": 19.991429522633553,
+   "n": 200,
+   "peak_mem_mb": 815.49365234375
+  },
+  "cpu": {
+   "median_ms": 55.04282750189304,
+   "p95_ms": 277.07923017442226,
+   "n": 50
+  }
+ },
+ "protectai-small-v2": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 141896450,
+  "gpu": {
+   "median_ms": 7.672968320548534,
+   "p95_ms": 11.154400184750557,
+   "n": 200,
+   "peak_mem_mb": 639.76513671875
+  },
+  "cpu": {
+   "median_ms": 28.38644664734602,
+   "p95_ms": 141.55593141913414,
+   "n": 50
+  }
+ },
+ "wolf-defender": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 307531778,
+  "gpu": {
+   "median_ms": 11.53118908405304,
+   "p95_ms": 24.20405112206936,
+   "n": 200,
+   "peak_mem_mb": 1276.56494140625
+  },
+  "cpu": {
+   "median_ms": 40.65363388508558,
+   "p95_ms": 271.02063223719597,
+   "n": 50
+  }
+ },
+ "jasperls": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 184423682,
+  "gpu": {
+   "median_ms": 14.446623157709837,
+   "p95_ms": 20.26493102312088,
+   "n": 200,
+   "peak_mem_mb": 814.86865234375
+  },
+  "cpu": {
+   "median_ms": 57.0175601169467,
+   "p95_ms": 265.1520352810621,
+   "n": 50
+  }
+ },
+ "testsavant-large": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 184423682,
+  "gpu": {
+   "median_ms": 14.325611293315887,
+   "p95_ms": 20.085041411221027,
+   "n": 200,
+   "peak_mem_mb": 815.49365234375
+  },
+  "cpu": {
+   "median_ms": 57.6302413828671,
+   "p95_ms": 319.0102241933346,
+   "n": 50
+  }
+ },
+ "piguard": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 184423682,
+  "gpu": {
+   "median_ms": 14.19407082721591,
+   "p95_ms": 20.130877383053303,
+   "n": 200,
+   "peak_mem_mb": 815.49755859375
+  },
+  "cpu": {
+   "median_ms": 57.24053969606757,
+   "p95_ms": 310.9339736402035,
+   "n": 50
+  }
+ },
+ "promptguard1-86m": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 278811651,
+  "gpu": {
+   "median_ms": 14.587353449314833,
+   "p95_ms": 33.94973184913397,
+   "n": 200,
+   "peak_mem_mb": 2481.67236328125
+  },
+  "cpu": {
+   "median_ms": 61.89623102545738,
+   "p95_ms": 580.709109082818,
+   "n": 50
+  }
+ },
+ "promptguard2-22m": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 70830722,
+  "gpu": {
+   "median_ms": 14.387581031769514,
+   "p95_ms": 17.89790950715542,
+   "n": 200,
+   "peak_mem_mb": 961.9814453125
+  },
+  "cpu": {
+   "median_ms": 28.380634728819132,
+   "p95_ms": 182.65107180923223,
+   "n": 50
+  }
+ },
+ "promptguard2-86m": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 278810882,
+  "gpu": {
+   "median_ms": 14.52753134071827,
+   "p95_ms": 34.10550020635128,
+   "n": 200,
+   "peak_mem_mb": 2306.64599609375
+  },
+  "cpu": {
+   "median_ms": 58.76713991165161,
+   "p95_ms": 515.894079580903,
+   "n": 50
+  }
+ },
+ "qualifire-sentinel": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 395833346,
+  "gpu": {
+   "median_ms": 19.541816785931587,
+   "p95_ms": 55.71566428989172,
+   "n": 200,
+   "peak_mem_mb": 1665.17041015625
+  },
+  "cpu": {
+   "median_ms": 119.99830324202776,
+   "p95_ms": 667.4407683312893,
+   "n": 50
+  }
+ },
+ "rogue-sentinel-v2": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 596051968,
+  "gpu": {
+   "median_ms": 29.888576362282038,
+   "p95_ms": 85.14755591750145,
+   "n": 200,
+   "peak_mem_mb": 3412.4619140625
+  },
+  "cpu": {
+   "median_ms": 158.89946883544326,
+   "p95_ms": 978.159018792212,
+   "n": 50
+  }
+ },
+ "sheltron": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 68418582,
+  "gpu": {
+   "median_ms": 15.615700744092464,
+   "p95_ms": 18.015126697719097,
+   "n": 200,
+   "peak_mem_mb": 302.64599609375
+  },
+  "cpu": {
+   "median_ms": 28.066513128578663,
+   "p95_ms": 138.23651894927025,
+   "n": 50
+  }
+ },
+ "horizon-base": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 307531778,
+  "gpu": {
+   "median_ms": 18.406751099973917,
+   "p95_ms": 28.887161053717136,
+   "n": 200,
+   "peak_mem_mb": 1287.32373046875
+  },
+  "cpu": {
+   "median_ms": 46.558198519051075,
+   "p95_ms": 286.97905223816633,
+   "n": 50
+  }
+ },
+ "prismor-1.5b": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 1543714304,
+  "gpu": {
+   "median_ms": 21.296018734574318,
+   "p95_ms": 29.826167970895767,
+   "n": 200,
+   "peak_mem_mb": 3104.15966796875
+  },
+  "cpu": {
+   "median_ms": 570.9058819338679,
+   "p95_ms": 1841.1082234233618,
+   "n": 50
+  }
+ },
+ "judge-qwen": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 4352972288,
+  "gpu": {
+   "median_ms": 81.45483769476414,
+   "p95_ms": 194.1009545698762,
+   "n": 200,
+   "peak_mem_mb": 6195.1357421875
+  }
+ },
+ "judge-llama": {
+  "gpu_name": "NVIDIA A40",
+  "cpu_threads": 8,
+  "params": 4540600320,
+  "gpu": {
+   "median_ms": 113.18913102149963,
+   "p95_ms": 205.46361058950424,
+   "n": 200,
+   "peak_mem_mb": 9907.0185546875
+  }
+ }
+}

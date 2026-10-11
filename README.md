@@ -34,7 +34,8 @@ All numbers are regenerated from the score files by `analysis/compute_all.py`; t
 
 ```
 scripts/     build evaluation sets, score detectors and judges
-analysis/    compute_all.py, compute_many.py (every number, table, figure), make_macros.py (-> LaTeX macros)
+analysis/    compute_all.py, compute_many.py, compute_robust.py, compute_e6.py, compute_cost.py (numbers),
+             make_tables.py, make_figures.py (tables and figures), make_macros.py (-> LaTeX macros)
 results/     detector and judge scores used in the paper
 paper/       LaTeX source, figures, compiled main.pdf
 ```
@@ -46,7 +47,15 @@ pip install -r requirements.txt
 AGENTDOJO_PY=/path/to/agentdojo-env/bin/python QWEN=/models/Qwen2.5-7B-Instruct LLAMA=/models/Llama-3.1-8B-Instruct bash reproduce.sh
 ```
 
-To regenerate only the numbers and figures from the released scores, copy `results/*.json` into the working directory, rebuild the `.jsonl` sets (steps 1–3 of `reproduce.sh`, CPU only), then run `python analysis/compute_all.py && python analysis/make_macros.py`.
+To regenerate only the numbers and figures from the released scores, copy `results/*.json` into the working directory, rebuild the `.jsonl` sets (steps 1–3 of `reproduce.sh`, CPU only, with `PYTHONHASHSEED=0`), then run the analysis scripts of step 8 and `python analysis/make_tables.py && python analysis/make_figures.py`.
+
+Robustness and cost experiments (journal version):
+
+- `analysis/compute_robust.py`: bootstrap intervals and permutation tests for rank transfer; thresholds calibrated on held-out AgentDojo suites.
+- `scripts/score_e6.py`, `analysis/compute_e6.py`: Prompt Guard 2 in the setting of the community benchmark buried-injections, and a check that the rebuilt sets reproduce the stored scores.
+- `scripts/latency.py`, `analysis/compute_cost.py`: latency and memory per tool output on GPU and CPU.
+- `scripts/e5_run.py`, `scripts/e5_compare.py`, `scripts/e5_score.py`: a real agent (Qwen2.5-7B served by vLLM) runs AgentDojo without attacks; its tool calls are replayed without a model and compared output by output.
+- `scripts/check_revision.py`: which Hugging Face revision produced the stored scores (Horizon-Labs changed its weights on 2026-10-02; the stored scores are revision `af3c52e6a9d8`).
 
 Evaluation data is rebuilt from the public sources, not redistributed: AgentDojo v1.2, tau-bench (MIT), InjecAgent attacks (MIT), BIPIA (MIT), GitHub READMEs (`h1alexbel/github-readmes`), AESLC, FineWeb-Edu. Some scripts assume BIPIA and PIGuard are cloned under `~/agentsec/`.
 
@@ -56,7 +65,7 @@ Evaluation data is rebuilt from the public sources, not redistributed: AgentDojo
 
 ## Status
 
-Draft. Not yet evaluated against adaptive attacks; both agent benchmarks are simulations and tau-bench's injection point is ours; commercial API detectors not included. See §6 of the paper.
+Preprint on arXiv; journal version in preparation. Not evaluated against adaptive attacks; both agent benchmarks are simulations and tau-bench's injection point is ours; commercial API detectors not included. See the limitations section of the paper.
 
 ## License
 

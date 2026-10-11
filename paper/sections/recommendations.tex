@@ -1,0 +1,8 @@
+\subsection{Recommendations for benchmark designers and detector developers}
+\label{sec:recommend}
+
+\paragraph{Benchmark designers}
+Replaying ground-truth tool calls without a model gives benign outputs with certain labels and a task structure, so false positives can be reported as blocked tasks; differential replay against a clean environment labels injected outputs where substring matching fails, a pitfall that silently inflated false-positive rates in our first attempt (\ref{app:labels}). Benchmarks that publish attack strings could also publish fingerprints, such as normalized prefixes, so that detector developers can check their training data for overlap, in the spirit of per-benchmark contamination reports for LLMs~\cite{sainz2023}.
+
+\paragraph{Detector developers}
+Model cards that state the training sources let users judge which benchmark scores are in distribution; the two detectors that publish enough to audit are the two whose results we can explain. Reporting detection at a fixed low false-positive rate on held-out tool outputs would make cards comparable, and training on structured documents and tool responses with planted instructions is a priority suggested by the detectors that led both agent benchmarks.
