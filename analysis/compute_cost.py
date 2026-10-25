@@ -23,7 +23,7 @@ lines = [r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrr@{}}", r"\t
          r" & & \multicolumn{3}{c}{GPU (%s)} & \multicolumn{2}{c}{CPU (%d threads)} \\"
          % (L[rows[0]]["gpu_name"].replace("NVIDIA ", ""), L[rows[0]]["cpu_threads"]),
          r"\cmidrule(lr){3-5}\cmidrule(l){6-7}",
-         r"Method & Parameters & Median (ms) & p95 (ms) & Memory (MB) & Median (ms) & p95 (ms) \\", r"\midrule"]
+         r"Method & Parameters & Median (ms) & p95 (ms) & Memory (MiB) & Median (ms) & p95 (ms) \\", r"\midrule"]
 for k in rows:
     r = L[k]
     cpu = r.get("cpu")

@@ -1,0 +1,36 @@
+{
+ "horizon-base": {
+  "wrapped": {
+   "benign_fpr05": 0.33004926108374383,
+   "evaded_tpr05": 1.0,
+   "benign_median": 0.038101136684417725
+  },
+  "plain": {
+   "benign_fpr05": 0.7536945812807881,
+   "evaded_tpr05": 1.0,
+   "benign_median": 0.7875503301620483
+  },
+  "body": {
+   "benign_fpr05": 0.03940886699507389,
+   "evaded_tpr05": 1.0,
+   "benign_median": 0.0030524153262376785
+  }
+ },
+ "qualifire-sentinel": {
+  "wrapped": {
+   "benign_fpr05": 0.04926108374384237,
+   "evaded_tpr05": 0.9145299145299145,
+   "benign_median": 0.0012742819963023067
+  },
+  "plain": {
+   "benign_fpr05": 0.0,
+   "evaded_tpr05": 0.8418803418803419,
+   "benign_median": 2.207780198659748e-05
+  },
+  "body": {
+   "benign_fpr05": 0.034482758620689655,
+   "evaded_tpr05": 0.8717948717948718,
+   "benign_median": 0.0006931464886292815
+  }
+ }
+}

@@ -71,11 +71,11 @@ for f in glob.glob("results/many/*.json"):
 # judges (task-aware LLMs) for the same sets
 for name, stem in [("judge-qwen", "Qwen2.5-7B-Instruct"), ("judge-llama", "Llama-3.1-8B-Instruct")]:
     for s, fn in [("admatched", "agentdojo_pairs"), ("adshift", "agentdojo_pairs_shift"), ("bipia", "bipia_pairs"),
-                  ("tbeval", "taubench_eval")]:
+                  ("tbeval", "taubench_eval"), ("adclean", "agentdojo_clean")]:
         p = f"hfjudge_{stem}_{fn}.json"
         if os.path.exists(p):
             j = json.load(open(p))
-            det[name][s] = dict(probs=j["probs"], labels=j["labels"])
+            det[name][s] = dict(probs=j["probs"], labels=j["labels"] if s != "adclean" else None)
 PRETTY.update({"judge-qwen": "Judge (Qwen2.5-7B)", "judge-llama": "Judge (Llama-3.1-8B)"})
 
 T = {}
@@ -98,6 +98,14 @@ for name, sets in det.items():
         y, p = np.array(sets[s]["labels"]), np.array(sets[s]["probs"])
         if s == "bipia":
             y, p = y[bip_keep], p[bip_keep]
+        elif "adclean" in sets:
+            # AD-Matched/AD-Shift benign outputs are the outputs an injection did not change (83 distinct texts,
+            # repeated per template) and exclude the clean versions of the injected outputs; the deployment-relevant
+            # negatives are all clean tool outputs (AD-Clean: deduplicated, including those clean twins).
+            row[f"{s}_tpr1_matchedneg"] = tpr_at(y, p)
+            neg = np.array(sets["adclean"]["probs"])
+            p = np.r_[p[y == 1], neg]
+            y = np.r_[np.ones(int((y == 1).sum())), np.zeros(len(neg))]
         row[f"{s}_auroc"] = float(roc_auc_score(y, p))
         row[f"{s}_tpr1"] = tpr_at(y, p)
         row[f"{s}_fpr05"] = float(np.mean(p[y == 0] >= 0.5))

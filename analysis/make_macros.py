@@ -92,7 +92,7 @@ if os.path.exists("analysis/numbers_many.json"):
     M["NDetectors"] = words[len(NM["detectors_in_rank"])]
     rk = NM["rank_transfer"]["bipia_tpr1_vs_admatched_tpr1"]
     M["RankTau"] = f"{rk['kendall_tau']:.2f}"
-    M["RankTauP"] = f"{rk['p_tau']:.2f}"
+    M["RankTauP"] = f"{rk['p_tau']:.3f}"
     M["RankRho"] = f"{rk['spearman']:.2f}"
     rk2 = NM["rank_transfer"]["bipia_auroc_vs_admatched_auroc"]
     M["RankTauAuc"] = f"{rk2['kendall_tau']:.2f}"
@@ -101,7 +101,7 @@ if os.path.exists("analysis/numbers_many.json"):
         if key in NM["rank_transfer"]:
             r = NM["rank_transfer"][key]
             M[f"Tau{tag}"] = f"{r['kendall_tau']:.2f}"
-            M[f"Tau{tag}P"] = f"{r['p_tau']:.3f}" if r["p_tau"] < 0.01 else f"{r['p_tau']:.2f}"
+            M[f"Tau{tag}P"] = f"{r['p_tau']:.4f}" if r["p_tau"] < 0.001 else f"{r['p_tau']:.3f}"
     ps = NM.get("pg_sources", {})
     if ps:
         M["PGBipiaRows"] = f"{ps['bipia_rows']:,}".replace(",", "{,}")
@@ -156,7 +156,7 @@ if os.path.exists("analysis/numbers_robust.json"):
                      ("bipia_tpr1_vs_tbeval_tpr1", "BITB"), ("adclean_fpr_vs_tbeval_fpr05", "FPRADTB")]:
         r = NR["e1"][key]
         M[f"Tau{tag}CI"] = f"{r['ci'][0]:.2f} to {r['ci'][1]:.2f}".replace("-", "$-$")
-        M[f"Tau{tag}Perm"] = "<0.001" if r["p_perm"] < 0.001 else f"{r['p_perm']:.2f}"
+        M[f"Tau{tag}Perm"] = "<0.001" if r["p_perm"] < 0.001 else f"{r['p_perm']:.3f}"
     M["AdMatchedBenignInClean"] = pct(NR["check"]["admatched_benign_in_adclean"], 0)
     for key, tag in [("horizon-base", "HZ"), ("wolf-defender", "WF"), ("prismor-1.5b", "PR"), ("promptguard2-86m", "PGt"),
                      ("promptguard2-22m", "PGts"), ("qualifire-sentinel", "QS"), ("piguard", "PG"), ("protectai-v2", "PA"),
@@ -240,8 +240,166 @@ if os.path.exists("results/horizon_revision_check.json"):
     HR = json.load(open("results/horizon_revision_check.json"))["revisions"]
     M["HZvTwoFlagged"] = str(HR["e4fbfc6f603e24c675cdf310c3b8d7abaa825666"]["flagged_at_05"])
 
+# ---------------------------------------------------------------- revision v4 (analysis/compute_v4.py)
+TAGS = {"horizon-base": "HZ", "wolf-defender": "WF", "prismor-1.5b": "PR", "promptguard2-86m": "PGt",
+        "promptguard2-22m": "PGts", "qualifire-sentinel": "QS", "sheltron": "SH", "piguard": "PG", "protectai-v2": "PA",
+        "testsavant-large": "TS", "rogue-sentinel-v2": "RS", "jasperls": "JL", "promptguard1-86m": "PGo",
+        "protectai-v1": "PAo", "protectai-small-v2": "PAs", "judge-qwen": "JQ", "judge-llama": "JLl"}
+ORD = ["zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+       "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth"]
+pp1 = lambda v: f"{100 * v:.1f}"  # noqa: E731
+if os.path.exists("analysis/numbers_many.json"):
+    NM = json.load(open("analysis/numbers_many.json"))
+    TT = NM["table"]
+    M["BestBipiaRankOnADOrd"] = ORD[NM["best_on_bipia_rank_on_agentdojo"]]
+    for key, tag in TAGS.items():
+        r = TT.get(key, {})
+        for k, nm in [("admatched_tpr1", "AD"), ("adshift_tpr1", "ADS"), ("admatched_tpr1_matchedneg", "ADm"),
+                      ("adshift_tpr1_matchedneg", "ADSm"), ("admatched_auroc", "ADAuc"), ("adclean_fpr", "Clean"),
+                      ("adclean_block", "Block"), ("bipia_tpr1", "BI"), ("tbeval_tpr1", "TB")]:
+            if r.get(k) is not None:
+                M[f"V{tag}{nm}"] = f"{r[k]:.2f}" if k.endswith("auroc") else pct(r[k])
+    for key, tag in [("bipia_tpr1_vs_tbeval_tpr1", "BITB"), ("bipia_auroc_vs_admatched_auroc", "AucBIAD"),
+                     ("admatched_auroc_vs_tbeval_auroc", "AucADTB")]:
+        r = NM["rank_transfer"].get(key)
+        if r:
+            M[f"Tau{tag}V"] = f"{r['kendall_tau']:.2f}"
+if os.path.exists("analysis/numbers_v4.json"):
+    V = json.load(open("analysis/numbers_v4.json"))
+    st = V["structure"]
+    M["NADBenignDistinct"] = str(st["n_benign_distinct"])
+    M["NInjPositions"] = str(st["n_injection_positions"])
+    M["NTwins"] = str(st["n_twins_distinct"])
+    M["NTwinRows"] = str(st["n_twin_rows"])
+    M["NADCleanDistinct"] = str(st["n_adclean_distinct"])
+    h = V["heldout"]["horizon-base"]["1"]["folds"]
+    w = max(h, key=lambda k: h[k]["fpr"])
+    M["LoHZWorstCount"] = f"{h[w]['n_flag']} of {h[w]['n_neg']}"
+    M["LoHZWorstSuite"] = w
+    for key, tag in TAGS.items():
+        c = V["cluster_ci"].get(key)
+        if c:
+            M[f"CI{tag}AD"] = f"{pp1(c['ad_ci'][0])}--{pp1(c['ad_ci'][1])}"
+            if c.get("tb_ci"):
+                M[f"CI{tag}TB"] = f"{pp1(c['tb_ci'][0])}--{pp1(c['tb_ci'][1])}"
+    PD = V["paired_diff"]
+    for k, nm in [("horizon-base-wolf-defender-ad", "HZWFad"), ("horizon-base-prismor-1.5b-ad", "HZPRad"),
+                  ("horizon-base-sheltron-tb", "HZSHtb"), ("sheltron-wolf-defender-tb", "SHWFtb"),
+                  ("horizon-base-wolf-defender-tb", "HZWFtb"), ("judge-qwen-noreq-judge-qwen-ad", "JQad"),
+                  ("judge-llama-noreq-judge-llama-ad", "JLlad"), ("judge-qwen-noreq-judge-qwen-tb", "JQtb"),
+                  ("judge-llama-noreq-judge-llama-tb", "JLltb")]:
+        if k in PD:
+            M[f"PD{nm}"] = f"{100 * PD[k]['diff']:.1f}"
+            M[f"PD{nm}CI"] = f"{pp1(PD[k]['ci'][0])} to {pp1(PD[k]['ci'][1])}".replace("-", "$-$")
+    tr = V["truncation"]
+    M["TruncAD"] = pct(tr["admatched"]["start_beyond_510"])
+    M["TruncADS"] = pct(tr["adshift"]["start_beyond_510"])
+    M["TruncTB"] = pct(tr["tbeval"]["start_beyond_510"])
+    M["LongAD"] = pct(tr["admatched"]["longer_than_510"])
+    M["MedStartAD"] = f"{tr['admatched']['median_start']:.0f}"
+    su = V["seen_unseen"]
+    M["SUGap"] = f"{100 * su['piguard_gap']:.1f}".replace("-", "$-$")
+    M["SUGapCI"] = f"{pp1(su['piguard_gap_ci'][0])} to {pp1(su['piguard_gap_ci'][1])}".replace("-", "$-$")
+    M["SUOthers"] = f"{100 * su['others_median_gap']:.1f}".replace("-", "$-$")
+    M["SUDiD"] = f"{100 * su['did']:.1f}".replace("-", "$-$")
+    M["SUDiDCI"] = f"{pp1(su['did_ci'][0])} to {pp1(su['did_ci'][1])}".replace("-", "$-$")
+    M["SUNSeenOut"] = str(su["n_seen_outputs"])
+    M["SUNUnseenOut"] = str(su["n_unseen_outputs"])
+    tm = V["tb_matched_negatives"]
+    M["TBmN"] = str(tm["n_neg"])
+    for key, tag in TAGS.items():
+        r = tm["detectors"].get(key)
+        if r:
+            M[f"TBm{tag}"] = pct(r["tpr1"])
+    for key, tag in TAGS.items():
+        h = V["heldout"].get(key)
+        if h:
+            M[f"Lo{tag}WorstFpr"] = pct(h["1"]["worst_fpr"])
+            M[f"Lo{tag}WorstTpr"] = pct(h["1"]["worst_tpr"])
+            M[f"Lo{tag}WorstFprTwo"] = pct(h["2"]["worst_fpr"])
+            M[f"Lo{tag}TprCI"] = f"{pp1(h['1']['tpr_ci'][0])}--{pp1(h['1']['tpr_ci'][1])}"
+            M[f"Lo{tag}FprCI"] = f"{pp1(h['1']['fpr_ci'][0])}--{pp1(h['1']['fpr_ci'][1])}"
+    ts = V["tau_sensitivity"]
+    r = ts["bipia_tpr1_vs_admatched_tpr1"]
+    M["TauBIADnoPG"] = f"{r['without_piguard']:.2f}"
+    M["TauBIADJack"] = f"{r['jackknife'][0]:.2f} to {r['jackknife'][1]:.2f}".replace("-", "$-$")
+    M["TauBIADFamP"] = f"{r['one_per_family_p']:.3f}"
+    M["TauBIADFam"] = f"{r['one_per_family']:.2f}"
+    r = ts["admatched_tpr1_vs_tbeval_tpr1"]
+    M["TauADTBJack"] = f"{r['jackknife'][0]:.2f} to {r['jackknife'][1]:.2f}".replace("-", "$-$")
+    M["TauADTBFam"] = f"{r['one_per_family']:.2f}"
+    M["TauADTBFamP"] = f"{r['one_per_family_p']:.3f}"
+    M["NFamily"] = str(ts["bipia_tpr1_vs_admatched_tpr1"]["n_family"])
+    for k, nm in [("general_fpr_vs_adclean_fpr", "GenAD"), ("general_fpr_vs_tbeval_fpr05", "GenTB")]:
+        M[f"Tau{nm}"] = f"{ts[k]['tau']:.2f}"
+        M[f"Tau{nm}P"] = f"{ts[k]['p']:.3f}"
+    bt = V["by_template"]
+    for key, tag in [("sheltron", "SH"), ("prismor-1.5b", "PR"), ("horizon-base", "HZ"), ("wolf-defender", "WF"),
+                     ("promptguard2-86m", "PGt")]:
+        for a, at in [("injecagent", "IA"), ("tool_knowledge", "TK"), ("system_message", "SM"),
+                      ("important_instructions", "II"), ("ignore_previous", "IP"), ("direct", "Dir")]:
+            if a in bt.get(key, {}):
+                M[f"Tpl{tag}{at}"] = pct(bt[key][a])
+    bc = V["bipia_context"]
+    M["BICtxSeenN"] = str(bc["n_benign_seen"])
+    M["BICtxSeenTpr"] = pct(bc["tpr_seen_test"])
+    M["BICtxUnseenTpr"] = pct(bc["tpr_unseen_test"])
+    if "llmail" in V:
+        L4 = V["llmail"]
+        M["NLLBenign"] = str(L4["n"]["benign"])
+        M["NLLEvaded"] = str(L4["n"]["evaded"])
+        M["NLLAttempt"] = f"{L4['n']['attempt']:,}".replace(",", "{,}")
+        for key, tag in TAGS.items():
+            r = L4["detectors"].get(key)
+            if r:
+                for k, nm in [("cal_evaded", "CalEv"), ("cal_attempt", "CalAt"), ("cal_fpr", "CalFpr"),
+                              ("default_evaded", "DefEv"), ("default_attempt", "DefAt"), ("default_fpr", "DefFpr")]:
+                    M[f"LL{tag}{nm}"] = pct(r[k])
+    for key, tag in [("judge-qwen", "JQ"), ("judge-llama", "JLl")]:
+        for s_, sn in [("admatched", "AD"), ("tbeval", "TB")]:
+            r = V["judge_no_request"].get(key, {}).get(s_)
+            if r:
+                M[f"NoReq{tag}{sn}"] = pct(r["tpr1_noreq"])
+                M[f"Req{tag}{sn}"] = pct(r["tpr1_req"])
+                M[f"NoReq{tag}{sn}Auc"] = f"{r['auroc_noreq']:.2f}"
+                M[f"Req{tag}{sn}Auc"] = f"{r['auroc_req']:.2f}"
+                M[f"NoReq{tag}{sn}Fpr"] = pct(r["fpr05_noreq"])
+                M[f"Req{tag}{sn}Fpr"] = pct(r["fpr05_req"])
+    for key, tag in TAGS.items():
+        w = V["window"].get(key)
+        if w:
+            for k, nm in [("ad_full_tpr1", "AD"), ("tb_tpr1", "TB"), ("bipia_tpr1", "BI"), ("adclean_fpr05", "Clean"),
+                          ("rb_trunc_ad_full_tpr1", "RbTruncAD")]:
+                if k in w:
+                    M[f"Win{tag}{nm}"] = pct(w[k])
+    # windowed versus truncated scoring of the same (rebuilt) AgentDojo outputs
+    others = [abs(w["ad_full_tpr1"] - w["rb_trunc_ad_full_tpr1"]) for k, w in V["window"].items()
+              if k not in ("piguard", "protectai-v2") and "rb_trunc_ad_full_tpr1" in w]
+    if others:
+        M["WinMaxOther"] = f"{100 * max(others):.1f}"
+    if "normalized_full" in V:
+        for k, nm in [("piguard/original", "PG"), ("piguard/values", "PGN"), ("protectai-deberta-v2/original", "PA"),
+                      ("protectai-deberta-v2/values", "PAN")]:
+            r = V["normalized_full"][k]
+            M[f"Nf{nm}Fpr"] = pct(r["fpr05"])
+            M[f"Nf{nm}TprHalf"] = pct(r["tpr05"])
+            M[f"Nf{nm}Tpr"] = pct(r["tpr1"])
+
+for fn in ["results/llmail_format_a.json", "results/llmail_format_b.json"]:  # scripts/llmail_format.py
+    if os.path.exists(fn):
+        for key, r in json.load(open(fn)).items():
+            tag = TAGS[key]
+            for form, nm in [("wrapped", "Wrap"), ("plain", "Plain"), ("body", "Body")]:
+                M[f"LLFmt{tag}{nm}"] = pct(r[form]["benign_fpr05"])
+                M[f"LLFmt{tag}{nm}Ev"] = pct(r[form]["evaded_tpr05"])
+
 with open("paper/numbers.tex", "w") as f:
     f.write("% Generated by analysis/make_macros.py from analysis/numbers.json. Do not edit.\n")
+    # the benchmark's name; Kendall's coefficient is written $\tau_K$ in the text
+    f.write("\\newcommand{\\taubench}{$\\tau$-bench\\xspace}\n")
+    # layout for the two-column 5p format: allow some extra stretch, and let URLs break at hyphens and slashes
+    f.write("\\setlength{\\emergencystretch}{1.5em}\n")
+    f.write(r"\def\UrlBreaks{\do\.\do\/\do\-\do\_\do\=\do\?\do\&}" + "\n")
     for k, v in sorted(M.items()):
         # interval macros are used inside brackets/parentheses, where \xspace would insert a stray space
         tail = "" if k.endswith("CI") else "\\xspace"

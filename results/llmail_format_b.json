@@ -1,0 +1,19 @@
+{
+ "wolf-defender": {
+  "wrapped": {
+   "benign_fpr05": 0.0,
+   "evaded_tpr05": 0.9615384615384616,
+   "benign_median": 9.134379797615111e-05
+  },
+  "plain": {
+   "benign_fpr05": 0.0,
+   "evaded_tpr05": 0.9572649572649573,
+   "benign_median": 1.084060022549238e-05
+  },
+  "body": {
+   "benign_fpr05": 0.0,
+   "evaded_tpr05": 0.9572649572649573,
+   "benign_median": 4.087520210305229e-05
+  }
+ }
+}

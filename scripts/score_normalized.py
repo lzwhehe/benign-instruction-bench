@@ -8,12 +8,15 @@ Reports FPR on benign outputs, TPR on outputs containing a benchmark injection, 
 """
 import collections
 import json
+import os
 import re
 import sys
 
 import numpy as np
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+DEV = os.environ.get("DEVICE", "cuda")  # DEVICE=cpu runs the encoders on CPU
 
 DETECTORS = {"protectai-deberta-v2": "protectai/deberta-v3-base-prompt-injection-v2", "piguard": "leolee99/PIGuard"}
 KEY = re.compile(r"^\s*(-\s+)?([A-Za-z_][\w ]{0,40}):\s?", re.M)
@@ -37,12 +40,12 @@ res = {}
 PROBS = {}
 for name, repo in DETECTORS.items():
     tok = AutoTokenizer.from_pretrained(repo)
-    model = AutoModelForSequenceClassification.from_pretrained(repo, trust_remote_code=(name == "piguard")).cuda().eval()
+    model = AutoModelForSequenceClassification.from_pretrained(repo, trust_remote_code=(name == "piguard")).to(DEV).eval()
 
     def score(ts):
         ps = []
         for i in range(0, len(ts), 16):
-            enc = tok(ts[i:i + 16], padding=True, truncation=True, max_length=512, return_tensors="pt").to("cuda")
+            enc = tok(ts[i:i + 16], padding=True, truncation=True, max_length=512, return_tensors="pt").to(DEV)
             with torch.no_grad():
                 ps.extend(torch.softmax(model(**enc).logits.float(), -1)[:, 1].cpu().tolist())
         return np.array(ps)
@@ -77,6 +80,6 @@ for name, repo in DETECTORS.items():
               f"tasks w/ benign output flagged={benign_block:.3f}")
         res[f"{name}/{v}"] = dict(fpr=float(f[y == 0].mean()), tpr=float(f[y == 1].mean()), task_block=float(benign_block))
     del model
-    torch.cuda.empty_cache()
+    torch.cuda.empty_cache() if DEV == "cuda" else None
 json.dump(res, open("normalized_results.json", "w"), indent=1)
 json.dump({"labels": y.tolist(), "probs": PROBS}, open("normalized_probs.json", "w"))

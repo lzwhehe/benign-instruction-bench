@@ -25,7 +25,7 @@ mpl.rcParams.update({
     "font.family": "serif", "font.serif": ["Times New Roman", "Times", "Nimbus Roman", "DejaVu Serif"],
     "mathtext.fontset": "stix",
     "font.size": 8, "axes.labelsize": 8, "axes.titlesize": 8,
-    "xtick.labelsize": 7, "ytick.labelsize": 7, "legend.fontsize": 7,
+    "xtick.labelsize": 7.2, "ytick.labelsize": 7.2, "legend.fontsize": 7.2,
     "axes.linewidth": 0.6, "lines.linewidth": 1.2, "lines.markersize": 4,
     "xtick.major.width": 0.6, "ytick.major.width": 0.6, "xtick.major.size": 3, "ytick.major.size": 3,
     "axes.grid": True, "grid.linestyle": "--", "grid.linewidth": 0.4, "grid.alpha": 0.5,
@@ -45,17 +45,18 @@ CODE = {"horizon-base": "HL", "wolf-defender": "WD", "prismor-1.5b": "PR", "prom
         "promptguard2-22m": "P2s", "promptguard1-86m": "P1", "piguard": "PG", "sheltron": "SH",
         "qualifire-sentinel": "QS", "rogue-sentinel-v2": "S2", "testsavant-large": "TS", "jasperls": "JS",
         "protectai-v1": "A1", "protectai-v2": "A2", "protectai-small-v2": "A2s", "judge-qwen": "JQ", "judge-llama": "JL"}
-OFFA = {"wolf-defender": (-4, 2), "prismor-1.5b": (-4, -8), "promptguard2-86m": (4, 0), "qualifire-sentinel": (-4, 1),
-        "promptguard2-22m": (4, -1), "judge-qwen": (4, -1), "judge-llama": (-4, -7), "protectai-v1": (4, 2),
-        "protectai-v2": (4, -7), "protectai-small-v2": (4, 2), "jasperls": (-4, -7), "rogue-sentinel-v2": (4, -7)}
-OFFB = {"protectai-v1": (4, 2), "protectai-v2": (4, -7), "protectai-small-v2": (4, 2), "promptguard2-86m": (-4, 2),
-        "promptguard2-22m": (4, -2), "judge-qwen": (-4, -8), "jasperls": (-4, -7), "piguard": (4, 2)}
+OFFA = {"wolf-defender": (4, 3), "prismor-1.5b": (-4, 2), "promptguard2-86m": (6, -12), "qualifire-sentinel": (-4, 1),
+        "promptguard2-22m": (4, -1), "judge-qwen": (4, -1), "judge-llama": (-4, -7), "protectai-v1": (7, 3),
+        "protectai-v2": (7, -9), "protectai-small-v2": (4, 2), "jasperls": (4, -6), "rogue-sentinel-v2": (4, -7)}
+OFFB = {"protectai-v1": (4, -8), "protectai-v2": (4, -7), "protectai-small-v2": (4, 2), "promptguard2-86m": (4, -9),
+        "promptguard2-22m": (4, -2), "judge-qwen": (-4, 4), "jasperls": (-4, -7), "piguard": (4, 2),
+        "testsavant-large": (-4, 3)}
 taus = {k: NM["rank_transfer"][k]["kendall_tau"] for k in NM["rank_transfer"]}
 fig, axs = plt.subplots(1, 2, figsize=(FULL_W, 2.8), sharey=True)
 panels = [(axs[0], "bipia_tpr1", "BIPIA: TPR at 1% FPR (%)", OFFA,
-           "(a) BIPIA vs. AgentDojo, Kendall $\\tau$ = %.2f" % taus["bipia_tpr1_vs_admatched_tpr1"]),
+           "(a) BIPIA vs. AgentDojo, Kendall's tau = %.2f" % taus["bipia_tpr1_vs_admatched_tpr1"]),
           (axs[1], "tbeval_tpr1", "$\\tau$-bench: TPR at 1% FPR (%)", OFFB,
-           "(b) $\\tau$-bench vs. AgentDojo, Kendall $\\tau$ = %.2f" % taus["admatched_tpr1_vs_tbeval_tpr1"])]
+           "(b) $\\tau$-bench vs. AgentDojo, Kendall's tau = %.2f" % taus["admatched_tpr1_vs_tbeval_tpr1"])]
 for ax, xkey, xlabel, off, title in panels:
     ax.plot([0, 100], [0, 100], color="#999999", lw=0.7, ls="--", zorder=0)
     for n, r in T.items():
@@ -114,47 +115,72 @@ ax[0].set_xticklabels(["As-is", "Markup\nremoved"])
 ax[0].set_ylabel("FPR on READMEs (%)")
 ax[0].set_title("(a) README chunks")
 ax[0].grid(axis="x", visible=False)
-for det in ["ProtectAI", "PIGuard"]:
-    a, b = N["AgentDojo"][det], N["AgentDojo"][det + "+norm"]
+NF = json.load(open("analysis/numbers_v4.json"))["normalized_full"]
+for det, key in [("ProtectAI", "protectai-deberta-v2"), ("PIGuard", "piguard")]:
+    a = dict(fpr_at_05=NF[key + "/original"]["fpr05"], tpr_at_05=NF[key + "/original"]["tpr05"])
+    b = dict(fpr_at_05=NF[key + "/values"]["fpr05"], tpr_at_05=NF[key + "/values"]["tpr05"])
     ax[1].scatter([a["fpr_at_05"] * 100], [a["tpr_at_05"] * 100], color=C2[det], marker="o", s=16, zorder=3)
     ax[1].scatter([b["fpr_at_05"] * 100], [b["tpr_at_05"] * 100], color=C2[det], marker="s", s=16, zorder=3)
     ax[1].annotate("", xy=(b["fpr_at_05"] * 100, b["tpr_at_05"] * 100), xytext=(a["fpr_at_05"] * 100, a["tpr_at_05"] * 100),
                    arrowprops=dict(arrowstyle="->", color=C2[det], lw=0.8))
-ax[1].set_xlabel("FPR (%)")
+ax[1].set_xlabel("FPR on AD-Clean (%)")
 ax[1].set_ylabel("TPR (%)")
-ax[1].set_title("(b) AD-Matched at 0.5")
-ax[1].set_xlim(0, 25)
-ax[1].set_ylim(40, 90)
+ax[1].set_title("(b) AgentDojo at 0.5")
+ax[1].set_xlim(15, 35)
+ax[1].set_ylim(45, 80)
 fig.legend(*ax[0].get_legend_handles_labels(), loc="outside upper center", ncol=2)
 fig.savefig(os.path.join(FIG, "fig_format.pdf"))
 
 # ------------------------------------------------------------------ ROC curves, log FPR (7.2 x 2.4 in)
+# AgentDojo: injected AD-Matched outputs against AD-Clean (the main metric); TB-Matched; BIPIA test-half attacks.
 bip = [json.loads(line) for line in open("bipia_pairs.jsonl")]
 keep_b = np.array([r["label"] == 0 or r.get("attack_split") == "test" for r in bip])
-SETS = [("AD-Matched", "normalized_probs_main.json", "agentdojo_pairs", None),
-        ("AD-Shift", "normalized_probs_shift.json", "agentdojo_pairs_shift", None),
-        ("BIPIA (test-half attacks)", "normalized_probs_bipia.json", "bipia_pairs", keep_b)]
-METH = [("ProtectAI v2", "#0072B2", "-"), ("PIGuard", "#D55E00", "--"), ("Judge (Qwen2.5-7B)", "#009E73", "-."),
-        ("Judge (Llama-3.1-8B)", "#CC79A7", ":")]
+METH = [("Horizon-Labs", "horizon-base", "#0072B2", "-"), ("Wolf Defender", "wolf-defender", "#56B4E9", "--"),
+        ("Prompt Guard 2 (86M)", "promptguard2-86m", "#E69F00", "-."), ("PIGuard", "piguard", "#D55E00", ":"),
+        ("Judge (Qwen2.5-7B)", "Qwen2.5-7B-Instruct", "#009E73", "-"),
+        ("Judge (Llama-3.1-8B)", "Llama-3.1-8B-Instruct", "#CC79A7", "--")]
+
+
+def scores(key, set_):
+    if "Instruct" in key:  # judges
+        stem = {"adclean": "agentdojo_clean", "admatched": "agentdojo_pairs", "tbeval": "taubench_eval",
+                "bipia": "bipia_pairs"}[set_]
+        d = json.load(open(f"results/hfjudge_{key}_{stem}.json"))
+        return np.array(d.get("labels", [0] * len(d["probs"])), dtype=int), np.array(d["probs"])
+    d = json.load(open(f"results/many/{key}__{set_}.json"))
+    return np.array(d["labels"] or [0] * len(d["probs"]), dtype=int), np.array(d["probs"])
+
+
+def panel(key, set_):
+    if set_ == "admatched":
+        y, p = scores(key, "admatched")
+        _, n = scores(key, "adclean")
+        return np.r_[np.ones(int(y.sum())), np.zeros(len(n))], np.r_[p[y == 1], n]
+    y, p = scores(key, set_)
+    return (y[keep_b], p[keep_b]) if set_ == "bipia" else (y, p)
+
+
 fig, axs = plt.subplots(1, 3, figsize=(FULL_W, 2.4), sharey=True)
-for k, (ax, (title, det_file, stem, keep)) in enumerate(zip(axs, SETS)):
-    D = json.load(open(os.path.join("results", det_file)))["probs"]
-    jq = json.load(open(f"results/hfjudge_Qwen2.5-7B-Instruct_{stem}.json"))
-    jl = json.load(open(f"results/hfjudge_Llama-3.1-8B-Instruct_{stem}.json"))
-    y = np.array(jq["labels"])
-    s = {"ProtectAI v2": np.array(D["protectai-deberta-v2/original"]), "PIGuard": np.array(D["piguard/original"]),
-         "Judge (Qwen2.5-7B)": np.array(jq["probs"]), "Judge (Llama-3.1-8B)": np.array(jl["probs"])}
-    if keep is not None:
-        y, s = y[keep], {k: v[keep] for k, v in s.items()}
-    for m, c, ls in METH:
-        fpr, tpr, _ = roc_curve(y, s[m])
+for k, (ax, (title, set_)) in enumerate(zip(axs, [("AD-Matched vs. AD-Clean", "admatched"),
+                                                    ("TB-Matched", "tbeval"),
+                                                    ("BIPIA (test-half attacks)", "bipia")])):
+    for m, key, c, ls in METH:
+        try:
+            y, sc = panel(key, set_)
+        except FileNotFoundError:
+            print("missing scores:", m, set_)
+            continue
+        fpr, tpr, _ = roc_curve(y, sc)
         ax.plot(np.clip(fpr, 1e-3, 1), tpr * 100, color=c, ls=ls, label=m)
     ax.axvline(0.01, color="#888888", lw=0.7, ls="--")
     ax.set_xscale("log")
     ax.set_xlim(1e-3, 1)
+    ax.set_xticks([1e-3, 1e-2, 1e-1, 1])
+    ax.set_xticklabels(["0.001", "0.01", "0.1", "1"])
+    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
     ax.set_title(f"({'abc'[k]}) {title}")
     ax.set_xlabel("False-positive rate (log scale)")
 axs[0].set_ylabel("True-positive rate (%)")
-fig.legend(*axs[0].get_legend_handles_labels(), loc="outside upper center", ncol=4)
+fig.legend(*axs[0].get_legend_handles_labels(), loc="outside upper center", ncol=6)
 fig.savefig(os.path.join(FIG, "fig_roc.pdf"))
 print("figures written to", FIG)
