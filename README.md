@@ -6,29 +6,29 @@ Teams pick injection detectors by their benchmark scores. We check whether those
 
 ## Findings
 
-Fifteen detectors (nine open, six license-gated including Meta's Prompt Guard 2) and two task-aware LLM judges, on two agent benchmarks (AgentDojo, tau-bench) and on BIPIA. Benign tool outputs come from replaying each benchmark's ground-truth tool calls without an LLM. Detection is TPR at the threshold that gives 1% FPR.
+Fifteen detectors (nine open, six license-gated including Meta's Prompt Guard 2) and two task-aware LLM judges, on two agent benchmarks (AgentDojo, tau-bench) and on BIPIA. Benign tool outputs come from replaying each benchmark's ground-truth tool calls without an LLM. Detection is TPR at the threshold that gives 1% FPR on the benign outputs of the same benchmark.
 
 | Detector | Released | FPR on benign tool outputs (AgentDojo / tau-bench) | Detection AgentDojo | Detection tau-bench | Detection BIPIA |
 |---|---|---|---|---|---|
-| Horizon-Labs guard-base | 2026 | 0.0% / 0.7% | 82.2% | 100.0% | 37.7% |
-| Wolf Defender | 2026 | 0.9% / 0.0% | 73.8% | 90.8% | 3.5% |
-| Prompt Guard 2 (86M) | 2025 | 0.6% / 0.0% | 69.4% | 57.9% | 10.4% |
+| Horizon-Labs guard-base | 2026 | 0.0% / 0.7% | 83.1% | 100.0% | 37.7% |
+| Wolf Defender | 2026 | 0.9% / 0.0% | 70.1% | 90.8% | 3.5% |
 | Prompt Guard 2 (22M) | 2025 | 0.0% / 0.0% | 60.9% | 60.8% | 31.7% |
-| Prismor-1.5B | 2026 | 6.5% / 46.2% | 72.2% | 15.2% | 4.0% |
+| Prompt Guard 2 (86M) | 2025 | 0.6% / 0.0% | 57.4% | 57.9% | 10.4% |
+| Judge (Llama-3.1-8B) | – | – | 51.9% | 78.3% | 8.3% |
+| Prismor-1.5B | 2026 | 6.5% / 46.2% | 29.2% | 15.2% | 4.0% |
 | Sheltron-68M | 2026 | 10.6% / 4.4% | 20.1% | 95.2% | 57.2% |
-| Judge (Llama-3.1-8B) | – | – | 55.3% | 78.3% | 8.3% |
-| PIGuard | 2025 | 29.5% / 11.0% | 2.1% | 52.7% | **95.1%** |
+| PIGuard | 2025 | 29.5% / 11.0% | 1.6% | 52.7% | **95.1%** |
 | ProtectAI v2 | 2024 | 30.1% / 66.9% | 0.5% | 10.1% | 0.7% |
 
-(All 15 detectors and both judges: `paper/tab_many.tex`.)
+(All 15 detectors and both judges, with AUROC and 95% task-clustered bootstrap intervals: Table 2 of the paper.)
 
-1. Detection rankings transfer poorly between benchmarks (Kendall τ over 15 detectors): 0.01 for BIPIA vs AgentDojo, 0.28 for AgentDojo vs tau-bench, 0.31 for BIPIA vs tau-bench; none significant. The BIPIA leader (PIGuard) ranks 13th of 15 on AgentDojo; Prismor drops from 72% on AgentDojo to 15% on tau-bench.
-2. False-positive rates on benign tool outputs range from 0% to over 90%, are consistent across the two agent benchmarks (τ = 0.67, p = 0.001), and are not predicted by false positives on ordinary text.
-3. The form of the training inputs, not overlap in attack strings, explains the results. PIGuard trained on 1,116 full BIPIA inputs and leads BIPIA. It also saw 53 of InjecAgent's 62 attacks, but only as short prompts; inside tau-bench tool outputs it detects seen and unseen InjecAgent attacks alike (52.1% vs 55.8%). Horizon-Labs shares no data with any benchmark, trained on agent-style inputs, and leads both agent benchmarks.
-4. Task-aware 7–8B judges (one trained before AgentDojo existed) reach 54–78% at 1% FPR on agent tool outputs, below the best dedicated detectors. Outside its training distribution every approach misses whole classes of injections; apart from PIGuard, no approach catches more than 39% of task-irrelevant injections.
-5. Removing serialization markup or declaring the input type lowers default-threshold false positives by up to about twentyfold but does not fix low-FPR detection.
+1. BIPIA rankings are at most weakly related to AgentDojo rankings (Kendall τ over 15 detectors: 0.12, p = 0.559, not significant; bootstrap interval 0.05 to 0.23; leaving out single detectors gives 0.01 to 0.25, and 0.25 without PIGuard). The largest reversal comes from a detector trained on BIPIA's distribution: the BIPIA leader (PIGuard) ranks thirteenth of 15 on AgentDojo. The two agent benchmarks agree more (τ = 0.39, p = 0.046); BIPIA vs tau-bench gives τ = 0.31.
+2. False-positive rates on benign tool outputs range from 0.0% to 93.1% and are consistent across the two agent benchmarks (τ = 0.67, p = 0.0007).
+3. PIGuard's BIPIA score does not depend on memorized attack strings and is consistent with training on BIPIA's distribution: its training split contains 1,116 full BIPIA inputs. It also saw 53 of 62 InjecAgent attacks, but only as short prompts; inside tau-bench tool outputs it detects seen and unseen InjecAgent attacks alike (52.1% vs 55.8%). Horizon-Labs, trained on agent-style inputs, leads both agent benchmarks; neither it nor the second-best detector can be shown to be independent of AgentDojo.
+4. Task-aware 7–8B judges reach 51.9% (Llama) and 59.0% (Qwen) on AgentDojo and 78.3% and 54.3% on tau-bench at 1% FPR, below the best dedicated detectors. Apart from PIGuard, no approach catches more than 39% of BIPIA's task-irrelevant injections.
+5. Removing serialization markup or declaring the input type lowers default-threshold false positives by up to about twentyfold, but does not make PIGuard or ProtectAI v2 useful at 1% FPR on AgentDojo.
 
-All numbers are regenerated from the score files by `analysis/compute_all.py`; the paper reads them only through `paper/numbers.tex`.
+All numbers are regenerated from the score files by the scripts in `analysis/` (`compute_all.py`, `compute_many.py`, `compute_robust.py`, `compute_v4.py`); `analysis/make_macros.py` writes them to the LaTeX macros the paper reads.
 
 ## Layout
 
